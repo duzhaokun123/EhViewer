@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+/*
 package com.hippo.ehviewer.ui.scene;
 
 import android.content.Context;
@@ -96,3 +96,5 @@ public class AnalyticsScene extends SolidScene implements View.OnClickListener {
         finish();
     }
 }
+
+ */

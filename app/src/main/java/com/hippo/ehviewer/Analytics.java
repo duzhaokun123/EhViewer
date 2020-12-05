@@ -19,33 +19,33 @@ package com.hippo.ehviewer;
 import android.app.Application;
 
 import com.hippo.scene.SceneFragment;
-import com.microsoft.appcenter.AppCenter;
-import com.microsoft.appcenter.crashes.Crashes;
-import com.microsoft.appcenter.distribute.Distribute;
+//import com.microsoft.appcenter.AppCenter;
+//import com.microsoft.appcenter.crashes.Crashes;
+//import com.microsoft.appcenter.distribute.Distribute;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public final class Analytics {
 
-    public static void start(Application application) {
-        if (BuildConfig.DEBUG) {
-            return;
-        }
-        AppCenter.start(application, "1aa06805-037c-4f3c-8aaa-e23d1433986d", com.microsoft.appcenter.analytics.Analytics.class, Crashes.class, Distribute.class);
-        AppCenter.setUserId(Settings.getUserID());
-    }
+//    public static void start(Application application) {
+//        if (BuildConfig.DEBUG) {
+//            return;
+//        }
+//        AppCenter.start(application, "1aa06805-037c-4f3c-8aaa-e23d1433986d", com.microsoft.appcenter.analytics.Analytics.class, Crashes.class, Distribute.class);
+//        AppCenter.setUserId(Settings.getUserID());
+//    }
 
-    public static boolean isEnabled() {
-        return AppCenter.isConfigured() && Settings.getEnableAnalytics();
-    }
+//    public static boolean isEnabled() {
+//        return AppCenter.isConfigured() && Settings.getEnableAnalytics();
+//    }
 
-    public static void onSceneView(SceneFragment scene) {
-        if (isEnabled()) {
-            Map<String, String> properties = new HashMap<>();
-            properties.put("scene_simple_class", scene.getClass().getSimpleName());
-            properties.put("scene_class", scene.getClass().getName());
-            com.microsoft.appcenter.analytics.Analytics.trackEvent("scene_view", properties);
-        }
-    }
+//    public static void onSceneView(SceneFragment scene) {
+//        if (isEnabled()) {
+//            Map<String, String> properties = new HashMap<>();
+//            properties.put("scene_simple_class", scene.getClass().getSimpleName());
+//            properties.put("scene_class", scene.getClass().getName());
+//            com.microsoft.appcenter.analytics.Analytics.trackEvent("scene_view", properties);
+//        }
+//    }
 }

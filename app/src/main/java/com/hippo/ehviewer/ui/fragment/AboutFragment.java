@@ -25,8 +25,9 @@ import com.google.android.gms.oss.licenses.OssLicensesMenuActivity;
 import com.hippo.ehviewer.Analytics;
 import com.hippo.ehviewer.EhApplication;
 import com.hippo.ehviewer.R;
+import com.hippo.ehviewer.UrlOpener;
 import com.hippo.util.AppHelper;
-import com.microsoft.appcenter.distribute.Distribute;
+//import com.microsoft.appcenter.distribute.Distribute;
 
 public class AboutFragment extends BaseSettingsFragment {
 
@@ -47,7 +48,7 @@ public class AboutFragment extends BaseSettingsFragment {
         author.setOnPreferenceClickListener(this);
         //donate.setOnPreferenceClickListener(this);
         checkForUpdate.setOnPreferenceClickListener(this);
-        checkForUpdate.setVisible(Analytics.isEnabled());
+//        checkForUpdate.setVisible(Analytics.isEnabled());
         OssLicensesMenuActivity.setActivityTitle(getString(R.string.license));
     }
 
@@ -58,7 +59,8 @@ public class AboutFragment extends BaseSettingsFragment {
             AppHelper.sendEmail(requireActivity(), EhApplication.getDeveloperEmail(),
                     "About EhViewer", null);
         } else if (KEY_CHECK_FOR_UPDATES.equals(key)) {
-            Distribute.checkForUpdate();
+//            Distribute.checkForUpdate();
+            UrlOpener.openUrl(requireContext(), "https://github.com/duzhaokun123/EhViewer", false);
         }
         return true;
     }

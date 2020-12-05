@@ -20,9 +20,9 @@ public class PrivacyFragment extends BaseSettingsFragment {
     @Override
     public void onCreatePreferencesFix(@Nullable Bundle savedInstanceState, String rootKey) {
         addPreferencesFromResource(R.xml.privacy_settings);
-        Preference enableAnalytics = findPreference(Settings.KEY_ENABLE_ANALYTICS);
+//        Preference enableAnalytics = findPreference(Settings.KEY_ENABLE_ANALYTICS);
 
-        enableAnalytics.setOnPreferenceChangeListener(this);
+//        enableAnalytics.setOnPreferenceChangeListener(this);
     }
 
     @Override
@@ -35,14 +35,14 @@ public class PrivacyFragment extends BaseSettingsFragment {
                 R.string.settings_privacy_pattern_protection_set);
     }
 
-    @Override
-    public boolean onPreferenceChange(Preference preference, Object newValue) {
-        String key = preference.getKey();
-        if (Settings.KEY_ENABLE_ANALYTICS.equals(key)) {
-            if (newValue instanceof Boolean && (Boolean) newValue) {
-                Analytics.start(getActivity().getApplication());
-            }
-        }
-        return true;
-    }
+//    @Override
+//    public boolean onPreferenceChange(Preference preference, Object newValue) {
+//        String key = preference.getKey();
+//        if (Settings.KEY_ENABLE_ANALYTICS.equals(key)) {
+//            if (newValue instanceof Boolean && (Boolean) newValue) {
+//                Analytics.start(getActivity().getApplication());
+//            }
+//        }
+//        return true;
+//    }
 }

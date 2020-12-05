@@ -7,15 +7,22 @@
 An E-Hentai Application for Android.
 
 
+# Note
+
+要新功能修 Bug 先找 [NekoInverter](https://gitlab.com/NekoInverter/EhViewer)
+
+ask [NekoInverter](https://gitlab.com/NekoInverter/EhViewer) for new functions and bugs as first
+
+
 # Screenshot
 
 ![screenshot-01](art/screenshot-01.png)
 
 # Download
 
-[下载](https://install.appcenter.ms/users/nekoinverter/apps/ehviewer/distribution_groups/public)
+[下载](https://github.com/duzhaokun123/EhViewer/releases)
 
-[Download](https://install.appcenter.ms/users/nekoinverter/apps/ehviewer/distribution_groups/public)
+[Download](https://github.com/duzhaokun123/EhViewer/releases)
 
 
 # Thanks

@@ -16,11 +16,11 @@
         app:summaryOff="@string/settings_privacy_secure_summary"
         app:summaryOn="@string/settings_privacy_secure_summary" />
 
-    <SwitchPreferenceCompat
-        app:iconSpaceReserved="false"
-        android:key="enable_analytics"
-        android:title="@string/settings_privacy_enable_analytics"
-        android:defaultValue="true"/>
+<!--    <SwitchPreferenceCompat-->
+<!--        app:iconSpaceReserved="false"-->
+<!--        android:key="enable_analytics"-->
+<!--        android:title="@string/settings_privacy_enable_analytics"-->
+<!--        android:defaultValue="true"/>-->
 
     <com.hippo.preference.MessagePreference
         android:key="about_analytics"

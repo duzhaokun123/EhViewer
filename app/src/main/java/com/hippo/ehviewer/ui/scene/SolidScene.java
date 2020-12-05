@@ -30,7 +30,7 @@ public class SolidScene extends BaseScene {
 
     public static final int CHECK_STEP_SECURITY = 0;
     public static final int CHECK_STEP_WARNING = 1;
-    public static final int CHECK_STEP_ANALYTICS = 2;
+//    public static final int CHECK_STEP_ANALYTICS = 2;
     public static final int CHECK_STEP_SIGN_IN = 3;
     public static final int CHECK_STEP_SELECT_SITE = 4;
     public static final String KEY_TARGET_SCENE = "target_scene";
@@ -45,15 +45,15 @@ public class SolidScene extends BaseScene {
                     break;
                 }
             case CHECK_STEP_WARNING:
-                if (Settings.getAskAnalytics()) {
-                    startScene(new Announcer(AnalyticsScene.class).setArgs(args), true);
-                    break;
-                }
-            case CHECK_STEP_ANALYTICS:
-                if (EhUtils.needSignedIn(getContext2())) {
-                    startScene(new Announcer(SignInScene.class).setArgs(args), true);
-                    break;
-                }
+//                if (Settings.getAskAnalytics()) {
+//                    startScene(new Announcer(AnalyticsScene.class).setArgs(args), true);
+//                    break;
+//                }
+//            case CHECK_STEP_ANALYTICS:
+//                if (EhUtils.needSignedIn(getContext2())) {
+//                    startScene(new Announcer(SignInScene.class).setArgs(args), true);
+//                    break;
+//                }
             case CHECK_STEP_SIGN_IN:
                 if (Settings.getSelectSite()) {
                     startScene(new Announcer(SelectSiteScene.class).setArgs(args), true);
