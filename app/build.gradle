@@ -17,7 +17,7 @@ android {
             pwd = properties.getProperty("RELEASE_KEY_PASSWORD")
         }
         release {
-            storeFile file("hitokoto.jks")
+            storeFile file("../ReleaseKey.jks")
             storePassword keystorePwd != null ? keystorePwd : System.getenv("KEYSTORE_PASS")
             keyAlias alias != null ? alias : System.getenv("ALIAS_NAME")
             keyPassword pwd != null ? pwd : System.getenv("ALIAS_PASS")
@@ -25,10 +25,10 @@ android {
     }
     defaultConfig {
         applicationId "com.duzhaokun123.ehviewer"
-        minSdkVersion 21
+        minSdkVersion 29
         targetSdkVersion 30
-        versionCode 121
-        versionName "1.7.17"
+        versionCode 122
+        versionName "1.7.17.1"
         resConfigs "zh", "zh-rCN", "zh-rHK", "zh-rTW",
                 "es", "ja", "ko", "fr", "de", "th"
         testOptions.unitTests.includeAndroidResources = true

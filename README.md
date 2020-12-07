@@ -11,7 +11,11 @@ An E-Hentai Application for Android.
 
 要新功能修 Bug 先找 [NekoInverter](https://gitlab.com/NekoInverter/EhViewer)
 
-ask [NekoInverter](https://gitlab.com/NekoInverter/EhViewer) for new functions and bugs as first
+Ask [NekoInverter](https://gitlab.com/NekoInverter/EhViewer) for new functions and bugs as first
+
+仅支持 API >= 29 的设备
+
+Only support API >= 29
 
 
 # Screenshot
