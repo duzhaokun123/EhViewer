@@ -53,6 +53,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.view.ViewCompat;
 
 import com.duzhaokun123.galleryview.GalleryView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -392,6 +393,15 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             galleryHeader.setDisplayCutout(insets.getDisplayCutout());
             return insets;
         });
+
+        switch (Settings.getReadingDirection()) {
+            case GalleryView.LAYOUT_MODE_L2R:
+                ViewCompat.setLayoutDirection(mSeekBarPanel, ViewCompat.LAYOUT_DIRECTION_LTR);
+                break;
+            case GalleryView.LAYOUT_MODE_R2L:
+                ViewCompat.setLayoutDirection(mSeekBarPanel, ViewCompat.LAYOUT_DIRECTION_RTL);
+                break;
+        }
 
         if (Settings.getGuideGallery()) {
             FrameLayout mainLayout = (FrameLayout) ViewUtils.$$(this, R.id.main);

@@ -36,7 +36,7 @@ abstract class GalleryProvider {
      */
     private val pageInfos = mutableMapOf<Int, PageInfo>()
 
-    private val listeners = mutableSetOf<Listener>()
+    private val listeners = mutableSetOf<Listener?>()
 
     var state = State.WAIT
 
@@ -104,19 +104,19 @@ abstract class GalleryProvider {
     @JvmOverloads
     protected fun notifyStateChange(state: State, error: String? = null) {
         this.state = state
-        listeners.forEach { it.onStateChange(state, error) }
+        listeners.forEach { it?.onStateChange(state, error) }
     }
 
     protected fun notifyPageWait(index: Int) {
         pageInfos[index] = PageInfo(index + 1, PageState.WAIT)
-        listeners.forEach { it.onPageStateChange(index, PageState.WAIT) }
+        listeners.forEach { it?.onPageStateChange(index, PageState.WAIT) }
     }
 
     protected fun notifyPageFailed(index: Int, error: String? = null) {
         pageInfos[index] = PageInfo(index + 1, PageState.ERROR, error = error)
         listeners.forEach {
-            it.onPageError(index, error)
-            it.onPageStateChange(index, PageState.ERROR)
+            it?.onPageError(index, error)
+            it?.onPageStateChange(index, PageState.ERROR)
         }
     }
 
@@ -126,8 +126,8 @@ abstract class GalleryProvider {
         pageInfos[index] = PageInfo(index + 1, PageState.LOADING, progress = progress)
         listeners.forEach {
             if (stateChanged)
-                it.onPageStateChange(index, PageState.LOADING)
-            it.onPageProgressChange(index, progress)
+                it?.onPageStateChange(index, PageState.LOADING)
+            it?.onPageProgressChange(index, progress)
         }
     }
 
@@ -135,20 +135,20 @@ abstract class GalleryProvider {
     protected fun notifyPageSucceed(index: Int, content: Bitmap? = null) {
         pageInfos[index] = PageInfo(index + 1, PageState.READY, content = content)
         listeners.forEach {
-            it.onPageReady(index, content)
-            it.onPageStateChange(index, PageState.READY)
+            it?.onPageReady(index, content)
+            it?.onPageStateChange(index, PageState.READY)
         }
     }
 
     interface Listener {
-        fun onStateChange(state: State, error: String? = null)
+        fun onStateChange(state: State, error: String? = null) {}
 
-        fun onPageStateChange(index: Int, state: PageState)
+        fun onPageStateChange(index: Int, state: PageState) {}
 
-        fun onPageReady(index: Int, bitmap: Bitmap?)
+        fun onPageReady(index: Int, bitmap: Bitmap?) {}
 
-        fun onPageError(index: Int, error: String? = null)
+        fun onPageError(index: Int, error: String? = null) {}
 
-        fun onPageProgressChange(index: Int, progress: Int)
+        fun onPageProgressChange(index: Int, progress: Int) {}
     }
 }

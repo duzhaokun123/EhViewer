@@ -1,7 +1,6 @@
 package com.duzhaokun123.galleryview
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -100,11 +99,6 @@ class GalleryView @JvmOverloads constructor(
 
             vp2!!.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
-                    provider?.let {
-                        if (it.stateOf(position) == GalleryProvider.PageState.WAIT) {
-                            it.request(position)
-                        }
-                    }
                     listener?.onUpdateCurrentIndex(position)
                 }
             })
@@ -137,44 +131,6 @@ class GalleryView @JvmOverloads constructor(
         }
     }
 
-    override fun onPageStateChange(index: Int, state: GalleryProvider.PageState) {
-        pageFragments.forEach {
-            if (it.isUsing && it.page == index + 1) {
-                it.state = state
-                return
-            }
-        }
-    }
-
-    override fun onPageReady(index: Int, bitmap: Bitmap?) {
-        pageFragments.forEach {
-            if (it.isUsing && it.page == index + 1) {
-                bitmap?.let { bitmap ->
-                    it.content = bitmap
-                }
-                return
-            }
-        }
-    }
-
-    override fun onPageError(index: Int, error: String?) {
-        pageFragments.forEach {
-            if (it.isUsing && it.page == index + 1) {
-                it.error = error
-                return
-            }
-        }
-    }
-
-    override fun onPageProgressChange(index: Int, progress: Int) {
-        pageFragments.forEach {
-            if (it.isUsing && it.page == index + 1) {
-                it.progress = progress
-                return
-            }
-        }
-    }
-
     fun pageLeft() {
         when (galleryLayoutMode) {
             LAYOUT_MODE_R2L -> vp2?.setCurrentItem(vp2!!.currentItem + 1, true)
@@ -196,14 +152,6 @@ class GalleryView @JvmOverloads constructor(
     private fun onSetPageFragmentInfo(index: Int, pageFragment: GalleryPageFragment) {
         pageFragment.page = index + 1
         pageFragment.pageTextColor = pageTextColor
-        try {
-            pageFragment.content = provider?.get(index)
-        } catch (e: GalleryProvider.CannotGetException) {
-            pageFragment.content = null
-        }
-        pageFragment.error = provider?.errorOf(index) ?: defaultErrorString
-        pageFragment.progress = provider?.progressOf(index) ?: 0
-        pageFragment.state = provider?.stateOf(index) ?: GalleryProvider.PageState.WAIT
         pageFragment.galleryViewListener = listener
         pageFragment.onStopListener = { provider?.cancelRequest(index) }
     }
@@ -219,7 +167,7 @@ class GalleryView @JvmOverloads constructor(
                     return it
                 }
             }
-            return GalleryPageFragment(this@GalleryView).also {
+            return GalleryPageFragment(this@GalleryView, provider).also {
                 onSetPageFragmentInfo(position, it)
                 pageFragments.add(it)
             }

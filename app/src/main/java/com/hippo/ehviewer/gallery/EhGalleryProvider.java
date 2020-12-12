@@ -18,6 +18,7 @@ package com.hippo.ehviewer.gallery;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -47,7 +48,7 @@ public class EhGalleryProvider extends GalleryProvider implements SpiderQueen.On
         mSpiderQueen = SpiderQueen.obtainSpiderQueen(mContext, mGalleryInfo, SpiderQueen.MODE_READ);
         mSpiderQueen.addOnSpiderListener(this);
 
-        if (getState() != State.READY)
+        if (getSize() > 0)
             notifyStateChange(State.READY);
     }
 
@@ -169,8 +170,7 @@ public class EhGalleryProvider extends GalleryProvider implements SpiderQueen.On
 
     @Override
     public void onGetPages(int pages) {
-        // TODO: 20-12-12
-//        notifyDataChanged();
+        notifyStateChange(State.READY);
     }
 
     @Override
@@ -188,7 +188,8 @@ public class EhGalleryProvider extends GalleryProvider implements SpiderQueen.On
     @Override
     public void onPageSuccess(int index, int finished, int downloaded, int total) {
 //        notifyDataChanged(index);
-        notifyPageSucceed(index);
+        // re-request to call onGetImageSuccess()
+        request(index);
     }
 
     @Override
