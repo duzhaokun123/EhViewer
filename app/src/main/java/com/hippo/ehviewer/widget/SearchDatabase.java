@@ -134,7 +134,7 @@ public final class SearchDatabase {
     }
 
     /**
-     * Builds the database.  This version has extra support for using the version field
+     * Builds the database.  This version has extra support for isUsing the version field
      * as a mode flags field, and configures the database columns depending on the mode bits
      * (features) requested by the extending class.
      */

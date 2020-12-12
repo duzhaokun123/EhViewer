@@ -18,6 +18,7 @@ package com.hippo.ehviewer.download;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -897,7 +898,7 @@ public class DownloadManager implements SpiderQueen.OnSpiderListener {
     }
 
     @Override
-    public void onGetImageSuccess(int index, Image image) {
+    public void onGetImageSuccess(int index, Bitmap image) {
         // Ignore
     }
 

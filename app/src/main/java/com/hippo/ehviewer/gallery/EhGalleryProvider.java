@@ -17,20 +17,20 @@
 package com.hippo.ehviewer.gallery;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.ehviewer.client.data.GalleryInfo;
 import com.hippo.ehviewer.spider.SpiderQueen;
-import com.hippo.glgallery.GalleryProvider;
-import com.hippo.image.Image;
 import com.hippo.unifile.UniFile;
 import com.hippo.yorozuya.SimpleHandler;
 
 import java.util.Locale;
 
-public class EhGalleryProvider extends GalleryProvider2 implements SpiderQueen.OnSpiderListener {
+public class EhGalleryProvider extends GalleryProvider implements SpiderQueen.OnSpiderListener {
 
     private final Context mContext;
     private final GalleryInfo mGalleryInfo;
@@ -44,16 +44,15 @@ public class EhGalleryProvider extends GalleryProvider2 implements SpiderQueen.O
 
     @Override
     public void start() {
-        super.start();
-
         mSpiderQueen = SpiderQueen.obtainSpiderQueen(mContext, mGalleryInfo, SpiderQueen.MODE_READ);
         mSpiderQueen.addOnSpiderListener(this);
+
+        if (getState() != State.READY)
+            notifyStateChange(State.READY);
     }
 
     @Override
     public void stop() {
-        super.stop();
-
         if (mSpiderQueen != null) {
             mSpiderQueen.removeOnSpiderListener(this);
             // Activity recreate may called, so wait 3000s
@@ -116,16 +115,16 @@ public class EhGalleryProvider extends GalleryProvider2 implements SpiderQueen.O
     }
 
     @Override
-    public int size() {
+    public int getSize() {
         if (mSpiderQueen != null) {
             return mSpiderQueen.size();
         } else {
-            return GalleryProvider.STATE_ERROR;
+            return -1;
         }
     }
 
     @Override
-    protected void onRequest(int index) {
+    public void request(int index) {
         if (mSpiderQueen != null) {
             Object object = mSpiderQueen.request(index);
             if (object instanceof Float) {
@@ -139,7 +138,7 @@ public class EhGalleryProvider extends GalleryProvider2 implements SpiderQueen.O
     }
 
     @Override
-    protected void onForceRequest(int index) {
+    public void forceRequest(int index) {
         if (mSpiderQueen != null) {
             Object object = mSpiderQueen.forceRequest(index);
             if (object instanceof Float) {
@@ -153,7 +152,7 @@ public class EhGalleryProvider extends GalleryProvider2 implements SpiderQueen.O
     }
 
     @Override
-    protected void onCancelRequest(int index) {
+    public void cancelRequest(int index) {
         if (mSpiderQueen != null) {
             mSpiderQueen.cancelRequest(index);
         }
@@ -170,7 +169,8 @@ public class EhGalleryProvider extends GalleryProvider2 implements SpiderQueen.O
 
     @Override
     public void onGetPages(int pages) {
-        notifyDataChanged();
+        // TODO: 20-12-12
+//        notifyDataChanged();
     }
 
     @Override
@@ -187,7 +187,8 @@ public class EhGalleryProvider extends GalleryProvider2 implements SpiderQueen.O
 
     @Override
     public void onPageSuccess(int index, int finished, int downloaded, int total) {
-        notifyDataChanged(index);
+//        notifyDataChanged(index);
+        notifyPageSucceed(index);
     }
 
     @Override
@@ -200,7 +201,7 @@ public class EhGalleryProvider extends GalleryProvider2 implements SpiderQueen.O
     }
 
     @Override
-    public void onGetImageSuccess(int index, Image image) {
+    public void onGetImageSuccess(int index, Bitmap image) {
         notifyPageSucceed(index, image);
     }
 

@@ -16,16 +16,18 @@
 
 package com.hippo.ehviewer.gallery;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Process;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.ehviewer.GetText;
 import com.hippo.ehviewer.R;
 import com.hippo.glgallery.GalleryPageView;
-import com.hippo.image.Image;
 import com.hippo.unifile.FilenameFilter;
 import com.hippo.unifile.UniFile;
 import com.hippo.util.NaturalComparator;
@@ -43,14 +45,13 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
-
+public class DirGalleryProvider extends GalleryProvider implements Runnable {
     private static final String TAG = DirGalleryProvider.class.getSimpleName();
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
-    private static FilenameFilter imageFilter =
-            (dir, name) -> StringUtils.endsWith(name.toLowerCase(), SUPPORT_IMAGE_EXTENSIONS);
-    private static Comparator<UniFile> naturalComparator = new Comparator<UniFile>() {
-        private NaturalComparator comparator = new NaturalComparator();
+    private static final FilenameFilter imageFilter =
+            (dir, name) -> StringUtils.endsWith(name.toLowerCase(), GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS());
+    private static final Comparator<UniFile> naturalComparator = new Comparator<UniFile>() {
+        private final NaturalComparator comparator = new NaturalComparator();
 
         @Override
         public int compare(UniFile o1, UniFile o2) {
@@ -63,7 +64,7 @@ public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
     private final AtomicReference<UniFile[]> mFileList = new AtomicReference<>();
     @Nullable
     private Thread mBgThread;
-    private volatile int mSize = STATE_WAIT;
+    private volatile int mSize = -1;
     private String mError;
 
     public DirGalleryProvider(@NonNull UniFile dir) {
@@ -72,8 +73,6 @@ public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
 
     @Override
     public void start() {
-        super.start();
-
         mBgThread = new PriorityThread(this, TAG + '-' + sIdGenerator.incrementAndGet(),
                 Process.THREAD_PRIORITY_BACKGROUND);
         mBgThread.start();
@@ -81,8 +80,6 @@ public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
 
     @Override
     public void stop() {
-        super.stop();
-
         if (mBgThread != null) {
             mBgThread.interrupt();
             mBgThread = null;
@@ -90,12 +87,12 @@ public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
     }
 
     @Override
-    public int size() {
+    public int getSize() {
         return mSize;
     }
 
     @Override
-    protected void onRequest(int index) {
+    public void request(int index) {
         synchronized (mRequests) {
             if (!mRequests.contains(index) && index != mDecodingIndex.get()) {
                 mRequests.add(index);
@@ -106,12 +103,12 @@ public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
     }
 
     @Override
-    protected void onForceRequest(int index) {
-        onRequest(index);
+    public void forceRequest(int index) {
+        request(index);
     }
 
     @Override
-    public void onCancelRequest(int index) {
+    public void cancelRequest(int index) {
         synchronized (mRequests) {
             mRequests.remove(Integer.valueOf(index));
         }
@@ -212,11 +209,11 @@ public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
         UniFile[] files = mDir.listFiles(imageFilter);
 
         if (files == null) {
-            mSize = STATE_ERROR;
+            mSize = -1;
             mError = GetText.getString(R.string.error_not_folder_path);
 
             // Notify to to show error
-            notifyDataChanged();
+            notifyStateChange(State.ERROR, mError);
 
             Log.i(TAG, "ImageDecoder end with error");
             return;
@@ -230,7 +227,7 @@ public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
 
         // Set state normal and notify
         mSize = files.length;
-        notifyDataChanged();
+        notifyStateChange(State.READY);
 
         while (!Thread.currentThread().isInterrupted()) {
             int index;
@@ -258,7 +255,7 @@ public class DirGalleryProvider extends GalleryProvider2 implements Runnable {
             InputStream is = null;
             try {
                 is = files[index].openInputStream();
-                Image image = Image.decode(is, true);
+                Bitmap image = BitmapFactory.decodeStream(is);
                 mDecodingIndex.lazySet(GalleryPageView.INVALID_INDEX);
                 if (image != null) {
                     notifyPageSucceed(index, image);

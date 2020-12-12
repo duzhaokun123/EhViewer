@@ -17,6 +17,7 @@
 package com.hippo.ehviewer.spider;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Process;
@@ -291,7 +292,7 @@ public final class SpiderQueen implements Runnable {
         }
     }
 
-    private void notifyGetImageSuccess(int index, Image image) {
+    private void notifyGetImageSuccess(int index, Bitmap image) {
         synchronized (mSpiderListeners) {
             for (OnSpiderListener listener : mSpiderListeners) {
                 listener.onGetImageSuccess(index, image);
@@ -1049,7 +1050,7 @@ public final class SpiderQueen implements Runnable {
          */
         void onFinish(int finished, int downloaded, int total);
 
-        void onGetImageSuccess(int index, Image image);
+        void onGetImageSuccess(int index, Bitmap image);
 
         void onGetImageFailure(int index, String error);
     }
@@ -1639,7 +1640,7 @@ public final class SpiderQueen implements Runnable {
                     continue;
                 }
 
-                Image image = null;
+                Bitmap image = null;
                 String error = null;
                 InputStream is;
 
@@ -1655,7 +1656,7 @@ public final class SpiderQueen implements Runnable {
                 }
 
                 if (is != null) {
-                    image = Image.decode(is, true);
+                    image = BitmapFactory.decodeStream(is);
                     if (image == null) {
                         error = GetText.getString(R.string.error_decoding_failed);
                     }

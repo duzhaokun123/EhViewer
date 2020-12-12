@@ -9,13 +9,17 @@ An E-Hentai Application for Android.
 
 # Note
 
-要新功能修 Bug 先找 [NekoInverter](https://gitlab.com/NekoInverter/EhViewer)
+要新功能修 Bug (你确定不是我的代码造成的) 先找 [NekoInverter](https://gitlab.com/NekoInverter/EhViewer)
 
-Ask [NekoInverter](https://gitlab.com/NekoInverter/EhViewer) for new functions and bugs as first
+Ask [NekoInverter](https://gitlab.com/NekoInverter/EhViewer) for new functions and bugs (which are not leaded by my code) as first
 
 仅支持 API >= 29 的设备
 
 Only support API >= 29
+
+`GalleryActivity`正在重构, 不要反馈关于它的 Bug
+
+`GalleryActivity` is in refactoring, do not report bugs about it
 
 
 # Screenshot
@@ -27,6 +31,20 @@ Only support API >= 29
 [下载](https://github.com/duzhaokun123/EhViewer/releases)
 
 [Download](https://github.com/duzhaokun123/EhViewer/releases)
+
+
+# Links
+
+也看看其他人的版本
+
+Also see other editions
+
+- [seven332/EhViewer](https://github.com/seven332/EhViewer)
+- [GitLab/NekoInverter/EhViewer](https://gitlab.com/NekoInverter/EhViewer)
+- [NuclearVGA/EhViewer](https://github.com/NuclearVGA/EhViewer)
+- [xiaojieonly/Ehviewer_CN_SXJ](https://github.com/xiaojieonly/Ehviewer_CN_SXJ)
+- [exzhawk/EhViewer](https://github.com/exzhawk/EhViewer)
+- [Just search it](https://github.com/search?q=EhViewer)
 
 
 # Thanks

@@ -17,17 +17,19 @@
 package com.hippo.ehviewer.gallery;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Process;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.a7zip.ArchiveException;
 import com.hippo.ehviewer.GetText;
 import com.hippo.ehviewer.R;
 import com.hippo.glgallery.GalleryPageView;
-import com.hippo.image.Image;
 import com.hippo.unifile.UniFile;
 import com.hippo.unifile.UniRandomAccessFile;
 import com.hippo.util.NaturalComparator;
@@ -35,7 +37,6 @@ import com.hippo.yorozuya.thread.PriorityThread;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -44,11 +45,11 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ArchiveGalleryProvider extends GalleryProvider2 {
+public class ArchiveGalleryProvider extends GalleryProvider {
 
     private static final AtomicInteger sIdGenerator = new AtomicInteger();
-    private static Comparator<A7ZipArchive.A7ZipArchiveEntry> naturalComparator = new Comparator<A7ZipArchive.A7ZipArchiveEntry>() {
-        private NaturalComparator comparator = new NaturalComparator();
+    private static final Comparator<A7ZipArchive.A7ZipArchiveEntry> naturalComparator = new Comparator<A7ZipArchive.A7ZipArchiveEntry>() {
+        private final NaturalComparator comparator = new NaturalComparator();
 
         @Override
         public int compare(A7ZipArchive.A7ZipArchiveEntry o1, A7ZipArchive.A7ZipArchiveEntry o2) {
@@ -62,7 +63,7 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
     private final AtomicInteger decodingIndex = new AtomicInteger(GalleryPageView.INVALID_INDEX);
     private Thread archiveThread;
     private Thread decodeThread;
-    private volatile int size = STATE_WAIT;
+    private volatile int size = 0;
     private String error;
 
     public ArchiveGalleryProvider(Context context, Uri uri) {
@@ -71,8 +72,6 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
 
     @Override
     public void start() {
-        super.start();
-
         int id = sIdGenerator.incrementAndGet();
 
         archiveThread = new PriorityThread(
@@ -86,8 +85,6 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
 
     @Override
     public void stop() {
-        super.stop();
-
         if (archiveThread != null) {
             archiveThread.interrupt();
             archiveThread = null;
@@ -99,12 +96,20 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
     }
 
     @Override
-    public int size() {
+    public int getSize() {
         return size;
     }
 
     @Override
-    protected void onRequest(int index) {
+    public void request(int index) {
+        if (stateOf(index) == PageState.READY) {
+            try {
+                notifyPageSucceed(index, get(index));
+                return;
+            } catch (CannotGetException e) {
+                e.printStackTrace();
+            }
+        }
         boolean inDecodeTask;
         synchronized (streams) {
             inDecodeTask = streams.containsKey(index) || index == decodingIndex.get();
@@ -121,12 +126,12 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
     }
 
     @Override
-    protected void onForceRequest(int index) {
-        onRequest(index);
+    public void forceRequest(int index) {
+        request(index);
     }
 
     @Override
-    protected void onCancelRequest(int index) {
+    public void cancelRequest(int index) {
         synchronized (requests) {
             requests.remove(Integer.valueOf(index));
         }
@@ -135,13 +140,6 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
     @Override
     public String getError() {
         return error;
-    }
-
-    @NonNull
-    @Override
-    public String getImageFilename(int index) {
-        // TODO
-        return Integer.toString(index);
     }
 
     @Override
@@ -174,9 +172,9 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
                 e.printStackTrace();
             }
             if (uraf == null) {
-                size = STATE_ERROR;
+                size = 0;
                 error = GetText.getString(R.string.error_reading_failed);
-                notifyDataChanged();
+                notifyStateChange(State.ERROR, error);
                 return;
             }
 
@@ -187,18 +185,18 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
                 e.printStackTrace();
             }
             if (archive == null) {
-                size = STATE_ERROR;
+                size = 0;
                 error = GetText.getString(R.string.error_invalid_archive);
-                notifyDataChanged();
+                notifyStateChange(State.ERROR, error);
                 return;
             }
 
             List<A7ZipArchive.A7ZipArchiveEntry> entries = archive.getArchiveEntries();
-            Collections.sort(entries, naturalComparator);
+            entries.sort(naturalComparator);
 
             // Update size and notify changed
             size = entries.size();
-            notifyDataChanged();
+            notifyStateChange(State.READY);
 
             while (!Thread.currentThread().isInterrupted()) {
                 int index;
@@ -270,9 +268,9 @@ public class ArchiveGalleryProvider extends GalleryProvider2 {
                 }
 
                 try {
-                    Image image = Image.decode(stream, true);
-                    if (image != null) {
-                        notifyPageSucceed(index, image);
+                    Bitmap bitmap = BitmapFactory.decodeStream(stream);
+                    if (bitmap != null) {
+                        notifyPageSucceed(index, bitmap);
                     } else {
                         notifyPageFailed(index, GetText.getString(R.string.error_decoding_failed));
                     }

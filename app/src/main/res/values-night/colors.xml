@@ -134,6 +134,6 @@
 
     <!--Shortcut background-->
     <color name="shortcut_bg">#F5F5F5</color>
-    <color name="colorNavigationBar">@color/colorBackground</color>
+    <color name="colorNavigationBar">@android:color/transparent</color>
     <color name="colorBackground">#303030</color>
 </resources>
