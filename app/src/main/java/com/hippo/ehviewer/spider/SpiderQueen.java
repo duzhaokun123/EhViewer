@@ -31,6 +31,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
+import com.duzhaokun123.galleryview.GalleryPageFragment;
+import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.beerbelly.SimpleDiskCache;
 import com.hippo.ehviewer.EhApplication;
 import com.hippo.ehviewer.GetText;
@@ -47,10 +49,6 @@ import com.hippo.ehviewer.client.parser.GalleryDetailParser;
 import com.hippo.ehviewer.client.parser.GalleryPageApiParser;
 import com.hippo.ehviewer.client.parser.GalleryPageParser;
 import com.hippo.ehviewer.client.parser.GalleryPageUrlParser;
-import com.hippo.ehviewer.gallery.GalleryProvider2;
-import com.hippo.glgallery.GalleryPageView;
-import com.hippo.glgallery.GalleryProvider;
-import com.hippo.image.Image;
 import com.hippo.streampipe.InputStreamPipe;
 import com.hippo.streampipe.OutputStreamPipe;
 import com.hippo.unifile.UniFile;
@@ -153,7 +151,7 @@ public final class SpiderQueen implements Runnable {
     private volatile int[] mPageStateArray;
     // For download, when it go to mPageStateArray.size(), done
     private volatile int mDownloadPage = -1;
-    private AtomicReference<String> showKey = new AtomicReference<>();
+    private final AtomicReference<String> showKey = new AtomicReference<>();
 
     private SpiderQueen(EhApplication application, @NonNull GalleryInfo galleryInfo) {
         mHttpClient = EhApplication.getOkHttpClient(application);
@@ -165,7 +163,7 @@ public final class SpiderQueen implements Runnable {
         mPreloadNumber = MathUtils.clamp(Settings.getPreloadImage(), 0, 100);
 
         for (int i = 0; i < DECODE_THREAD_NUM; i++) {
-            mDecodeIndexArray[i] = GalleryPageView.INVALID_INDEX;
+            mDecodeIndexArray[i] = GalleryPageFragment.INVALID_INDEX;
         }
 
         mWorkerPoolExecutor = new ThreadPoolExecutor(mWorkerMaxCount, mWorkerMaxCount,
@@ -405,9 +403,9 @@ public final class SpiderQueen implements Runnable {
 
     public int size() {
         if (mQueenThread == null) {
-            return GalleryProvider.STATE_ERROR;
+            return -2;
         } else if (mPageStateArray == null) {
-            return GalleryProvider.STATE_WAIT;
+            return -1;
         } else {
             return mPageStateArray.length;
         }
@@ -1076,7 +1074,7 @@ public final class SpiderQueen implements Runnable {
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
             mPipe.close();
             mPipe.release();
         }
@@ -1281,8 +1279,8 @@ public final class SpiderQueen implements Runnable {
                         extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mediaType.toString());
                     }
                     // Ensure extension
-                    if (!Utilities.contain(GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS, extension)) {
-                        extension = GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS[0];
+                    if (!Utilities.contain(GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS(), extension)) {
+                        extension = GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS()[0];
                     }
 
                     OutputStreamPipe osPipe = null;
@@ -1597,7 +1595,7 @@ public final class SpiderQueen implements Runnable {
 
         private void resetDecodeIndex() {
             synchronized (mDecodeRequestQueue) {
-                mDecodeIndexArray[mThreadIndex] = GalleryPageView.INVALID_INDEX;
+                mDecodeIndexArray[mThreadIndex] = GalleryPageFragment.INVALID_INDEX;
             }
         }
 

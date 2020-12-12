@@ -18,6 +18,7 @@ package com.hippo.ehviewer.gallery;
 
 import androidx.annotation.NonNull;
 
+import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.a7zip.ArchiveException;
 import com.hippo.a7zip.InArchive;
 import com.hippo.a7zip.PropID;
@@ -40,7 +41,7 @@ class A7ZipArchive implements Closeable {
     }
 
     private static boolean isSupportedFilename(String name) {
-        for (String extension : GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS) {
+        for (String extension : GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS()) {
             if (name.endsWith(extension)) {
                 return true;
             }

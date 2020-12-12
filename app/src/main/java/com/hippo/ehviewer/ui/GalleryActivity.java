@@ -977,7 +977,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             mScreenRotation.setSelection(Settings.getScreenRotation());
             mReadingDirection.setSelection(Settings.getReadingDirection());
             mScaleMode.setSelection(Settings.getPageScaling());
-            mStartPosition.setSelection(Settings.getStartPosition());
+//            mStartPosition.setSelection(Settings.getStartPosition());
             mReadTheme.setSelection(Settings.getReadTheme());
             mKeepScreenOn.setChecked(Settings.getKeepScreenOn());
             mShowClock.setChecked(Settings.getShowClock());

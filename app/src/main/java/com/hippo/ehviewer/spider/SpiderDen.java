@@ -22,13 +22,13 @@ import android.webkit.MimeTypeMap;
 
 import androidx.annotation.Nullable;
 
+import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.beerbelly.SimpleDiskCache;
 import com.hippo.ehviewer.EhDB;
 import com.hippo.ehviewer.Settings;
 import com.hippo.ehviewer.client.EhCacheKeyFactory;
 import com.hippo.ehviewer.client.EhUtils;
 import com.hippo.ehviewer.client.data.GalleryInfo;
-import com.hippo.ehviewer.gallery.GalleryProvider2;
 import com.hippo.io.UniFileInputStreamPipe;
 import com.hippo.io.UniFileOutputStreamPipe;
 import com.hippo.streampipe.InputStreamPipe;
@@ -118,7 +118,7 @@ public final class SpiderDen {
 
     @Nullable
     private static UniFile findImageFile(UniFile dir, int index) {
-        for (String extension : GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS) {
+        for (String extension : GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS()) {
             String filename = generateImageFilename(index, extension);
             UniFile file = dir.findFile(filename);
             if (file != null) {
@@ -179,10 +179,10 @@ public final class SpiderDen {
      * @param extension with dot
      */
     private String fixExtension(String extension) {
-        if (Utilities.contain(GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS, extension)) {
+        if (Utilities.contain(GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS(), extension)) {
             return extension;
         } else {
-            return GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS[0];
+            return GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS()[0];
         }
     }
 
@@ -261,8 +261,8 @@ public final class SpiderDen {
         }
 
         boolean result = false;
-        for (int i = 0, n = GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS.length; i < n; i++) {
-            String filename = generateImageFilename(index, GalleryProvider2.SUPPORT_IMAGE_EXTENSIONS[i]);
+        for (int i = 0, n = GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS().length; i < n; i++) {
+            String filename = generateImageFilename(index, GalleryProvider.Companion.getSUPPORT_IMAGE_EXTENSIONS()[i]);
             UniFile file = dir.subFile(filename);
             if (file != null) {
                 result |= file.delete();

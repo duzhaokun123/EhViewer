@@ -21,6 +21,8 @@ class GalleryPageFragment
         const val STATE_PAGE = "page"
         const val STATE_KEY_PROVIDER = "provider"
         const val STATE_PAGE_TEXT_COLOR = "ptc"
+
+        const val INVALID_INDEX = -1
     }
 
     private var tvPage: TextView? = null

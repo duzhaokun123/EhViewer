@@ -20,7 +20,6 @@ import kotlinx.coroutines.launch
 class GalleryView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), GalleryProvider.Listener {
-
     init {
         LayoutInflater.from(context).inflate(R.layout.layout_gallary_view, this)
     }
@@ -35,6 +34,32 @@ class GalleryView @JvmOverloads constructor(
         const val SCALE_FIT_HEIGHT = 2
         const val SCALE_FIT = 3
         const val SCALE_FIXED = 4
+
+        @GalleryLayoutMode
+        @JvmStatic
+        fun sanitizeLayoutMode(layoutMode: Int): Int {
+            return if (layoutMode != LAYOUT_MODE_L2R
+                    && layoutMode != LAYOUT_MODE_R2L
+                    && layoutMode != LAYOUT_MODE_T2B) {
+                LAYOUT_MODE_L2R
+            } else {
+                layoutMode
+            }
+        }
+
+        @ScaleMode
+        @JvmStatic
+        fun sanitizeScaleMode(scaleMode: Int): Int {
+            return if (scaleMode != SCALE_ORIGIN
+                    && scaleMode != SCALE_FIT_WIDTH
+                    && scaleMode != SCALE_FIT_HEIGHT
+                    && scaleMode != SCALE_FIT
+                    && scaleMode != SCALE_FIXED) {
+                SCALE_FIT
+            } else {
+                scaleMode
+            }
+        }
     }
 
     @IntDef(LAYOUT_MODE_R2L, LAYOUT_MODE_L2R, LAYOUT_MODE_T2B)

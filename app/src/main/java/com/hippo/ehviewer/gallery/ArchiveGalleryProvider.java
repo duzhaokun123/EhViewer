@@ -25,11 +25,11 @@ import android.os.Process;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.duzhaokun123.galleryview.GalleryPageFragment;
 import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.a7zip.ArchiveException;
 import com.hippo.ehviewer.GetText;
 import com.hippo.ehviewer.R;
-import com.hippo.glgallery.GalleryPageView;
 import com.hippo.unifile.UniFile;
 import com.hippo.unifile.UniRandomAccessFile;
 import com.hippo.util.NaturalComparator;
@@ -58,9 +58,9 @@ public class ArchiveGalleryProvider extends GalleryProvider {
     };
     private final UniFile file;
     private final Stack<Integer> requests = new Stack<>();
-    private final AtomicInteger extractingIndex = new AtomicInteger(GalleryPageView.INVALID_INDEX);
+    private final AtomicInteger extractingIndex = new AtomicInteger(GalleryPageFragment.INVALID_INDEX);
     private final LinkedHashMap<Integer, InputStream> streams = new LinkedHashMap<>();
-    private final AtomicInteger decodingIndex = new AtomicInteger(GalleryPageView.INVALID_INDEX);
+    private final AtomicInteger decodingIndex = new AtomicInteger(GalleryPageFragment.INVALID_INDEX);
     private Thread archiveThread;
     private Thread decodeThread;
     private volatile int size = 0;
@@ -216,7 +216,7 @@ public class ArchiveGalleryProvider extends GalleryProvider {
 
                 // Check index valid
                 if (index < 0 || index >= entries.size()) {
-                    extractingIndex.lazySet(GalleryPageView.INVALID_INDEX);
+                    extractingIndex.lazySet(GalleryPageFragment.INVALID_INDEX);
                     notifyPageFailed(index, GetText.getString(R.string.error_out_of_range));
                     continue;
                 }
@@ -236,7 +236,7 @@ public class ArchiveGalleryProvider extends GalleryProvider {
                 } catch (ArchiveException e) {
                     e.printStackTrace();
                 } finally {
-                    extractingIndex.lazySet(GalleryPageView.INVALID_INDEX);
+                    extractingIndex.lazySet(GalleryPageFragment.INVALID_INDEX);
                 }
             }
         }
@@ -275,7 +275,7 @@ public class ArchiveGalleryProvider extends GalleryProvider {
                         notifyPageFailed(index, GetText.getString(R.string.error_decoding_failed));
                     }
                 } finally {
-                    decodingIndex.lazySet(GalleryPageView.INVALID_INDEX);
+                    decodingIndex.lazySet(GalleryPageFragment.INVALID_INDEX);
                 }
             }
         }
