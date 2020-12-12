@@ -23,7 +23,6 @@ import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
 
 import com.hippo.ehviewer.AppConfig;
-import com.hippo.ehviewer.EhApplication;
 import com.hippo.ehviewer.R;
 import com.hippo.util.ExceptionUtils;
 import com.hippo.util.IoThreadPoolExecutor;
@@ -59,6 +58,7 @@ public class EhTagDatabase {
     private static volatile EhTagDatabase instance;
     // TODO more lock for different language
     private static final Lock lock = new ReentrantLock();
+    private static final OkHttpClient client = new OkHttpClient.Builder().build();
 
     static {
         NAMESPACE_TO_PREFIX.put("artist", "a:");
@@ -78,7 +78,7 @@ public class EhTagDatabase {
     public EhTagDatabase(String name, BufferedSource source) throws IOException {
         this.name = name;
         String[] tmp;
-        StringBuilder buffer = new StringBuilder("");
+        StringBuilder buffer = new StringBuilder();
         source.readInt();
         for (String i : source.readUtf8().split("\n")) {
             tmp = i.split("\r", 2);
@@ -188,7 +188,7 @@ public class EhTagDatabase {
         return equals(s1, s2);
     }
 
-    private static boolean save(OkHttpClient client, String url, File file) {
+    private static boolean save(String url, File file) {
         Request request = new Request.Builder().url(url).build();
         Call call = client.newCall(request);
         try (Response response = call.execute()) {
@@ -260,11 +260,9 @@ public class EhTagDatabase {
                     }
                 }
 
-                OkHttpClient client = EhApplication.getOkHttpClient(EhApplication.getInstance());
-
                 // Save new sha1
                 File tempSha1File = new File(dir, sha1Name + ".tmp");
-                if (!save(client, sha1Url, tempSha1File)) {
+                if (!save(sha1Url, tempSha1File)) {
                     FileUtils.delete(tempSha1File);
                     return;
                 }
@@ -278,7 +276,7 @@ public class EhTagDatabase {
 
                 // Save new data
                 File tempDataFile = new File(dir, dataName + ".tmp");
-                if (!save(client, dataUrl, tempDataFile)) {
+                if (!save(dataUrl, tempDataFile)) {
                     FileUtils.delete(tempDataFile);
                     return;
                 }
@@ -378,7 +376,6 @@ public class EhTagDatabase {
         return searchTag(tags, keyword);
     }
 
-    @Nullable
     private ArrayList<Pair<String, String>> searchTag(byte[] tags, String keyword) {
         ArrayList<Pair<String, String>> searchHints = new ArrayList<>();
         int begin = 0;
