@@ -24,7 +24,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.duzhaokun123.galleryview.GalleryPageFragment;
+import com.duzhaokun123.galleryview.GalleryPageAdapter;
 import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.ehviewer.GetText;
 import com.hippo.ehviewer.R;
@@ -60,7 +60,7 @@ public class DirGalleryProvider extends GalleryProvider implements Runnable {
     };
     private final UniFile mDir;
     private final Stack<Integer> mRequests = new Stack<>();
-    private final AtomicInteger mDecodingIndex = new AtomicInteger(GalleryPageFragment.INVALID_INDEX);
+    private final AtomicInteger mDecodingIndex = new AtomicInteger(GalleryPageAdapter.INVALID_INDEX);
     private final AtomicReference<UniFile[]> mFileList = new AtomicReference<>();
     @Nullable
     private Thread mBgThread;
@@ -247,7 +247,7 @@ public class DirGalleryProvider extends GalleryProvider implements Runnable {
 
             // Check index valid
             if (index < 0 || index >= files.length) {
-                mDecodingIndex.lazySet(GalleryPageFragment.INVALID_INDEX);
+                mDecodingIndex.lazySet(GalleryPageAdapter.INVALID_INDEX);
                 notifyPageFailed(index, GetText.getString(R.string.error_out_of_range));
                 continue;
             }
@@ -256,19 +256,19 @@ public class DirGalleryProvider extends GalleryProvider implements Runnable {
             try {
                 is = files[index].openInputStream();
                 Bitmap image = BitmapFactory.decodeStream(is);
-                mDecodingIndex.lazySet(GalleryPageFragment.INVALID_INDEX);
+                mDecodingIndex.lazySet(GalleryPageAdapter.INVALID_INDEX);
                 if (image != null) {
                     notifyPageSucceed(index, image);
                 } else {
                     notifyPageFailed(index, GetText.getString(R.string.error_decoding_failed));
                 }
             } catch (IOException e) {
-                mDecodingIndex.lazySet(GalleryPageFragment.INVALID_INDEX);
+                mDecodingIndex.lazySet(GalleryPageAdapter.INVALID_INDEX);
                 notifyPageFailed(index, GetText.getString(R.string.error_reading_failed));
             } finally {
                 IOUtils.closeQuietly(is);
             }
-            mDecodingIndex.lazySet(GalleryPageFragment.INVALID_INDEX);
+            mDecodingIndex.lazySet(GalleryPageAdapter.INVALID_INDEX);
         }
 
         // Clear file list

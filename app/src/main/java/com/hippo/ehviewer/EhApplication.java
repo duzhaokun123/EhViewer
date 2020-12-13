@@ -259,6 +259,11 @@ public class EhApplication extends RecordingApplication {
         return "ehviewersu$gmail.com".replace('$', '@');
     }
 
+    @NonNull
+    public static String getDeveloper2ndEmail() {
+        return "duzhaokun2$outlook.com".replace('$', '@');
+    }
+
     @SuppressLint("StaticFieldLeak")
     @Override
     public void onCreate() {

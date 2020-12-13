@@ -28,6 +28,11 @@
         android:title="@string/settings_about_author"
         app:iconSpaceReserved="false" />
 
+    <Preference
+        android:key="author_2nd"
+        android:title="@string/settings_about_author_2nd"
+        app:iconSpaceReserved="false" />
+
     <com.hippo.preference.UrlPreference
         android:key="telegram"
         android:title="@string/settings_about_telegram"

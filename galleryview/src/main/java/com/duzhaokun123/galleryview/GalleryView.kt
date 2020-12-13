@@ -9,9 +9,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.annotation.IntDef
 import androidx.core.view.ViewCompat
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
-import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -21,7 +18,7 @@ class GalleryView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr), GalleryProvider.Listener {
     init {
-        LayoutInflater.from(context).inflate(R.layout.layout_gallary_view, this)
+        LayoutInflater.from(context).inflate(R.layout.view_gallary_view, this)
     }
 
     companion object {
@@ -70,17 +67,36 @@ class GalleryView @JvmOverloads constructor(
     @Retention(AnnotationRetention.SOURCE)
     annotation class ScaleMode
 
-    private var pb: ProgressBar? = null
-    private var tvError: TextView? = null
-    private var vp2: ViewPager2? = null
-
-    private val pageFragments = mutableSetOf<GalleryPageFragment>()
+    private val pb = findViewById<ProgressBar>(R.id.pb)!!
+    private val tvError = findViewById<TextView>(R.id.tv_error)!!
+    private val vp2 = findViewById<ViewPager2>(R.id.vp2)!!.apply {
+        if (isInEditMode.not()) {
+            adapter = GalleryPageAdapter(context)
+            registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    listener?.onUpdateCurrentIndex(position)
+                }
+            })
+        }
+    }
 
     @GalleryLayoutMode
     var galleryLayoutMode = LAYOUT_MODE_R2L
+        set(value) {
+            if (field != value) {
+                field = value
+                onSetGalleryLayoutMode()
+            }
+        }
 
     @ScaleMode
     var scaleMode = SCALE_FIT
+        set(value) {
+            if (field != value) {
+                field = value
+                (vp2.adapter as GalleryPageAdapter).scaleMode = value
+            }
+        }
 
     var defaultErrorString = "error"
     var pageTextColor = Color.GRAY
@@ -88,7 +104,7 @@ class GalleryView @JvmOverloads constructor(
     var listener: Listener? = null
         set(value) {
             field = value
-            pageFragments.forEach { it.galleryViewListener = value }
+            (vp2.adapter as GalleryPageAdapter).galleryViewListener = value
         }
 
     var provider: GalleryProvider? = null
@@ -100,56 +116,46 @@ class GalleryView @JvmOverloads constructor(
             field = value
 
             value?.let { onStateChange(it.state) }
+            (vp2.adapter as GalleryPageAdapter).provider = provider
         }
+
+//    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+//        super.onWindowFocusChanged(hasWindowFocus)
+//        if (hasWindowFocus) {
+//            vp2.apply {
+//                offscreenPageLimit = 1
+//                (getChildAt(0) as RecyclerView).apply {
+//                    val padding = vp2.width / 2
+//                    setPadding(padding, 0, 0, 0)
+//                    clipToPadding = false
+//                }
+//            }
+//        }
+//    }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        pb = findViewById(R.id.pb)
-        tvError = findViewById(R.id.tv_error)
-        vp2 = findViewById(R.id.vp2)
-
-        if (isInEditMode.not()) {
-            vp2!!.adapter = ViewPager2Adapter(context as FragmentActivity)
-            when (galleryLayoutMode) {
-                LAYOUT_MODE_L2R -> {
-                    vp2!!.orientation = ViewPager2.ORIENTATION_HORIZONTAL
-                    ViewCompat.setLayoutDirection(vp2!!, ViewCompat.LAYOUT_DIRECTION_LTR)
-                }
-                LAYOUT_MODE_R2L -> {
-                    vp2!!.orientation = ViewPager2.ORIENTATION_HORIZONTAL
-                    ViewCompat.setLayoutDirection(vp2!!, ViewCompat.LAYOUT_DIRECTION_RTL)
-                }
-                LAYOUT_MODE_T2B -> vp2!!.orientation = ViewPager2.ORIENTATION_VERTICAL
-            }
-
-            vp2!!.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
-                override fun onPageSelected(position: Int) {
-                    listener?.onUpdateCurrentIndex(position)
-                }
-            })
-
-            provider?.let { onStateChange(it.state) }
-        }
+        onSetGalleryLayoutMode()
     }
 
     override fun onStateChange(state: GalleryProvider.State, error: String?) {
         GlobalScope.launch(Dispatchers.Main) {
             when (state) {
                 GalleryProvider.State.WAIT -> {
-                    pb?.visibility = VISIBLE
-                    tvError?.visibility = GONE
-                    vp2?.visibility = GONE
+                    pb.visibility = VISIBLE
+                    tvError.visibility = GONE
+                    vp2.visibility = GONE
                 }
                 GalleryProvider.State.ERROR -> {
-                    pb?.visibility = GONE
-                    tvError?.visibility = VISIBLE
-                    vp2?.visibility = GONE
-                    tvError?.text = error
+                    pb.visibility = GONE
+                    tvError.visibility = VISIBLE
+                    vp2.visibility = GONE
+                    tvError.text = error
                 }
                 GalleryProvider.State.READY -> {
-                    pb?.visibility = GONE
-                    tvError?.visibility = GONE
-                    vp2?.visibility = VISIBLE
+                    pb.visibility = GONE
+                    tvError.visibility = GONE
+                    vp2.visibility = VISIBLE
                 }
             }
             listener?.onStateChange(state)
@@ -158,44 +164,33 @@ class GalleryView @JvmOverloads constructor(
 
     fun pageLeft() {
         when (galleryLayoutMode) {
-            LAYOUT_MODE_R2L -> vp2?.setCurrentItem(vp2!!.currentItem + 1, true)
-            LAYOUT_MODE_L2R -> vp2?.setCurrentItem(vp2!!.currentItem - 1, true)
+            LAYOUT_MODE_R2L -> vp2.setCurrentItem(vp2.currentItem + 1, true)
+            LAYOUT_MODE_L2R -> vp2.setCurrentItem(vp2.currentItem - 1, true)
         }
     }
 
     fun pageRight() {
         when (galleryLayoutMode) {
-            LAYOUT_MODE_R2L -> vp2?.setCurrentItem(vp2!!.currentItem - 1, true)
-            LAYOUT_MODE_L2R -> vp2?.setCurrentItem(vp2!!.currentItem + 1, true)
+            LAYOUT_MODE_R2L -> vp2.setCurrentItem(vp2.currentItem - 1, true)
+            LAYOUT_MODE_L2R -> vp2.setCurrentItem(vp2.currentItem + 1, true)
         }
     }
 
     fun setCurrentPage(page: Int) {
-        vp2?.setCurrentItem(page, true)
+        vp2.setCurrentItem(page, true)
     }
 
-    private fun onSetPageFragmentInfo(index: Int, pageFragment: GalleryPageFragment) {
-        pageFragment.page = index + 1
-        pageFragment.pageTextColor = pageTextColor
-        pageFragment.galleryViewListener = listener
-        pageFragment.onStopListener = { provider?.cancelRequest(index) }
-    }
-
-    inner class ViewPager2Adapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
-
-        override fun getItemCount() = provider?.size ?: 0
-
-        override fun createFragment(position: Int): Fragment {
-            pageFragments.forEach {
-                if (it.isUsing.not()) {
-                    onSetPageFragmentInfo(position, it)
-                    return it
-                }
+    private fun onSetGalleryLayoutMode() {
+        when (galleryLayoutMode) {
+            LAYOUT_MODE_L2R -> {
+                vp2.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+                ViewCompat.setLayoutDirection(vp2, ViewCompat.LAYOUT_DIRECTION_LTR)
             }
-            return GalleryPageFragment(this@GalleryView, provider).also {
-                onSetPageFragmentInfo(position, it)
-                pageFragments.add(it)
+            LAYOUT_MODE_R2L -> {
+                vp2.orientation = ViewPager2.ORIENTATION_HORIZONTAL
+                ViewCompat.setLayoutDirection(vp2, ViewCompat.LAYOUT_DIRECTION_RTL)
             }
+            LAYOUT_MODE_T2B -> vp2.orientation = ViewPager2.ORIENTATION_VERTICAL
         }
     }
 

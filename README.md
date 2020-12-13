@@ -64,6 +64,7 @@ Here is the libraries
 - [libjpeg-turbo](http://libjpeg-turbo.virtualgl.org/)
 - [libpng](http://www.libpng.org/pub/png/libpng.html)
 - [okhttp](https://github.com/square/okhttp)
+- [PhotoView](https://github.com/chrisbanes/PhotoView)
 - [roaster](https://github.com/forge/roaster)
 - [ShowcaseView](https://github.com/amlcurran/ShowcaseView)
 - [Slabo](https://github.com/TiroTypeworks/Slabo)

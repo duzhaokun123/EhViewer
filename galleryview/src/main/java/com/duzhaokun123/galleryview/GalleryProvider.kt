@@ -102,16 +102,19 @@ abstract class GalleryProvider {
     }
 
     @JvmOverloads
+    @Synchronized
     protected fun notifyStateChange(state: State, error: String? = null) {
         this.state = state
         listeners.forEach { it?.onStateChange(state, error) }
     }
 
+    @Synchronized
     protected fun notifyPageWait(index: Int) {
         pageInfos[index] = PageInfo(index + 1, PageState.WAIT)
         listeners.forEach { it?.onPageStateChange(index, PageState.WAIT) }
     }
 
+    @Synchronized
     protected fun notifyPageFailed(index: Int, error: String? = null) {
         pageInfos[index] = PageInfo(index + 1, PageState.ERROR, error = error)
         listeners.forEach {
@@ -120,6 +123,7 @@ abstract class GalleryProvider {
         }
     }
 
+    @Synchronized
     protected fun notifyPagePercent(index: Int, percent: Float) {
         val stateChanged = stateOf(index) != PageState.LOADING
         val progress = (100 * percent).toInt()
@@ -132,6 +136,7 @@ abstract class GalleryProvider {
     }
 
     @JvmOverloads
+    @Synchronized
     protected fun notifyPageSucceed(index: Int, content: Bitmap? = null) {
         pageInfos[index] = PageInfo(index + 1, PageState.READY, content = content)
         listeners.forEach {

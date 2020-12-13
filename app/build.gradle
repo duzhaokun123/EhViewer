@@ -28,8 +28,8 @@ android {
         applicationId "com.duzhaokun123.ehviewer"
         minSdkVersion 29
         targetSdkVersion 30
-        versionCode 126
-        versionName "1.7.18.2"
+        versionCode 127
+        versionName "1.7.18.3"
         resConfigs "zh", "zh-rCN", "zh-rHK", "zh-rTW",
                 "es", "ja", "ko", "fr", "de", "th"
         testOptions.unitTests.includeAndroidResources = true

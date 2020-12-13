@@ -31,7 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.UiThread;
 
-import com.duzhaokun123.galleryview.GalleryPageFragment;
+import com.duzhaokun123.galleryview.GalleryPageAdapter;
 import com.duzhaokun123.galleryview.GalleryProvider;
 import com.hippo.beerbelly.SimpleDiskCache;
 import com.hippo.ehviewer.EhApplication;
@@ -163,7 +163,7 @@ public final class SpiderQueen implements Runnable {
         mPreloadNumber = MathUtils.clamp(Settings.getPreloadImage(), 0, 100);
 
         for (int i = 0; i < DECODE_THREAD_NUM; i++) {
-            mDecodeIndexArray[i] = GalleryPageFragment.INVALID_INDEX;
+            mDecodeIndexArray[i] = GalleryPageAdapter.INVALID_INDEX;
         }
 
         mWorkerPoolExecutor = new ThreadPoolExecutor(mWorkerMaxCount, mWorkerMaxCount,
@@ -1595,7 +1595,7 @@ public final class SpiderQueen implements Runnable {
 
         private void resetDecodeIndex() {
             synchronized (mDecodeRequestQueue) {
-                mDecodeIndexArray[mThreadIndex] = GalleryPageFragment.INVALID_INDEX;
+                mDecodeIndexArray[mThreadIndex] = GalleryPageAdapter.INVALID_INDEX;
             }
         }
 

@@ -35,8 +35,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -53,6 +55,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.view.GestureDetectorCompat;
 import androidx.core.view.ViewCompat;
 
 import com.duzhaokun123.galleryview.GalleryView;
@@ -176,6 +179,8 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
     private int mLayoutMode;
     private int mSize;
     private int mCurrentIndex;
+    @Nullable
+    private GestureDetectorCompat mGestureDetector;
 
     private int mSavingPage = -1;
 
@@ -407,6 +412,8 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             FrameLayout mainLayout = (FrameLayout) ViewUtils.$$(this, R.id.main);
             mainLayout.addView(new GalleryGuideView(this));
         }
+
+        mGestureDetector = new GestureDetectorCompat(this, new TapListener());
     }
 
     @Override
@@ -537,6 +544,13 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
         }
 
         return super.onKeyUp(keyCode, event);
+    }
+
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        mGestureDetector.onTouchEvent(ev);
+        return super.dispatchTouchEvent(ev);
     }
 
     @SuppressLint("SetTextI18n")
@@ -1004,8 +1018,8 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             }
 
             int screenRotation = mScreenRotation.getSelectedItemPosition();
-//            int layoutMode = GalleryView.sanitizeLayoutMode(mReadingDirection.getSelectedItemPosition());
-//            int scaleMode = GalleryView.sanitizeScaleMode(mScaleMode.getSelectedItemPosition());
+            int layoutMode = GalleryView.sanitizeLayoutMode(mReadingDirection.getSelectedItemPosition());
+            int scaleMode = GalleryView.sanitizeScaleMode(mScaleMode.getSelectedItemPosition());
 //            int startPosition = GalleryView.sanitizeStartPosition(mStartPosition.getSelectedItemPosition());
             int readTheme = mReadTheme.getSelectedItemPosition();
             boolean keepScreenOn = mKeepScreenOn.isChecked();
@@ -1022,8 +1036,8 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             boolean oldReadingFullscreen = Settings.getReadingFullscreen();
 
             Settings.putScreenRotation(screenRotation);
-//            Settings.putReadingDirection(layoutMode);
-//            Settings.putPageScaling(scaleMode);
+            Settings.putReadingDirection(layoutMode);
+            Settings.putPageScaling(scaleMode);
 //            Settings.putStartPosition(startPosition);
             Settings.putReadTheme(readTheme);
             Settings.putKeepScreenOn(keepScreenOn);
@@ -1064,8 +1078,8 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
                     getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                     break;
             }
-//            mGalleryView.setLayoutMode(layoutMode);
-//            mGalleryView.setScaleMode(scaleMode);
+            mGalleryView.setGalleryLayoutMode(layoutMode);
+            mGalleryView.setScaleMode(scaleMode);
 //            mGalleryView.setStartPosition(startPosition);
             if (keepScreenOn) {
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -1086,7 +1100,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             setScreenLightness(customScreenLightness, screenLightness);
 
             // Update slider
-//            mLayoutMode = layoutMode;
+            mLayoutMode = layoutMode;
             updateSlider();
 
             if (oldReadingFullscreen != readingFullscreen || oldReadTheme != readTheme) {
@@ -1177,6 +1191,36 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
                     break;
             }
             mNotifyTaskPool.push(this);
+        }
+    }
+
+    private class TapListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            if (mGalleryView == null) return false;
+
+            View decorView = getWindow().getDecorView();
+            float x0 = 0;
+            float x1 = decorView.getWidth() / 3F;
+            float x2 = 2 * x1;
+            float x3 = decorView.getWidth();
+            float y0 = 0;
+            float y1 = decorView.getHeight() / 2F;
+            float y2 = decorView.getHeight();
+            float x = e.getX();
+            float y = e.getY();
+            if (x >= x0 && x < x1) {
+                mGalleryView.pageLeft();
+            } else if (x >= x1 && x < x2) {
+                if (y >= y0 && y < y1) {
+                    onTapMenuArea();
+                } else if (y >= y1 && y < y2) {
+                    onTapSliderArea();
+                }
+            } else if (x >= x2 && x<= x3) {
+                mGalleryView.pageRight();
+            }
+            return true;
         }
     }
 }
