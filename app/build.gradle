@@ -28,8 +28,8 @@ android {
         applicationId "com.duzhaokun123.ehviewer"
         minSdkVersion 29
         targetSdkVersion 30
-        versionCode 127
-        versionName "1.7.18.3"
+        versionCode 128
+        versionName "1.7.18.4"
         resConfigs "zh", "zh-rCN", "zh-rHK", "zh-rTW",
                 "es", "ja", "ko", "fr", "de", "th"
         testOptions.unitTests.includeAndroidResources = true
@@ -48,8 +48,22 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+//            minifyEnabled true
+//            shrinkResources true
+            minifyEnabled false
+            /* FIXME: do not minify, or get Error like:
+                java.lang.VerifyError: Verifier rejected class d.t.c: android.animation.Animator d.t.c.q(android.view.ViewGroup, d.t.h0, d.t.h0) failed to verify: android.animation.Animator d.t.c.q(android.view.ViewGroup, d.t.h0, d.t.h0): [0x9D] copy1 v20<-v9 type=Reference: d.t.q0 cat=1 (declaration of 'd.t.c' appears in base.apk)
+                    at d.t.b0.b(TransitionInflater.java:8)
+                    at d.t.b0.b(TransitionInflater.java:62)
+                    at d.t.b0.c(TransitionInflater.java:2)
+                    at com.hippo.ehviewer.ui.scene.EnterGalleryDetailTransaction.onTransition(EnterGalleryDetailTransaction.java:5)
+                    at com.hippo.scene.StageActivity.startScene(StageActivity.java:43)
+                    at com.hippo.scene.StageActivity.startScene(StageActivity.java:1)
+                    at com.hippo.scene.SceneFragment.startScene(SceneFragment.java:6)
+                    at com.hippo.ehviewer.ui.scene.FavoritesScene.onItemClick(FavoritesScene.java:23)
+                    at com.hippo.ehviewer.ui.scene.FavoritesScene$FavoritesAdapter.onItemClick(FavoritesScene.java:1)
+                    ...
+             */
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
         }
@@ -92,6 +106,7 @@ dependencies {
     implementation 'com.github.seven332:conaco:0.1.5-eh'
     implementation 'com.github.seven332:streampipe:0.1.0'
     implementation 'com.github.seven332:tuxiang:0.1.6'
+    //noinspection GradleDependency
     implementation 'com.github.seven332:unifile:9ec57bcd8f'
     implementation 'com.github.seven332:yorozuya:0.1.2'
     implementation 'com.github.seven332:yorozuya-thread:0.1.1'
@@ -101,6 +116,7 @@ dependencies {
 //    implementation "com.microsoft.appcenter:appcenter-analytics:${appCenterSdkVersion}"
 //    implementation "com.microsoft.appcenter:appcenter-crashes:${appCenterSdkVersion}"
 //    implementation "com.microsoft.appcenter:appcenter-distribute:${appCenterSdkVersion}"
+    //noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.14.9'
     implementation 'com.squareup.okhttp3:okhttp-dnsoverhttps:3.14.7'
     implementation 'com.takisoft.preferencex:preferencex:1.1.0'
@@ -125,10 +141,6 @@ dependencies {
 
 configurations.all {
     resolutionStrategy {
-        force 'com.github.seven332:glgallery:25893283ca'
-        force 'com.github.seven332:glview:ba6aee61d7'
-        force 'com.github.seven332:glview-image:68d94b0fc2'
-
         exclude group: 'com.github.seven332', module: 'okhttp'
         exclude group: 'com.github.seven332', module: 'image'
     }

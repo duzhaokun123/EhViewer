@@ -568,6 +568,7 @@
     <string name="settings_about_declaration_summary">EhViewer 与 E-Hentai.org 无任何联系</string>
     <string name="settings_about_author">作者</string>
     <string name="settings_about_author_2nd">第二作者</string>
+    <string name="settings_about_author_3rd">第三作者</string>
     <string name="settings_about_latest_release">最新版本</string>
     <string name="settings_about_website">网站</string>
     <string name="settings_about_source">源码</string>

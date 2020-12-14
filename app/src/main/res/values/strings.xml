@@ -619,7 +619,9 @@
     <string name="settings_about_author">Author</string>
     <string name="settings_about_author_summary" translatable="false">Hippo &lt;ehviewersu$gmail.com&gt;</string>
     <string name="settings_about_author_2nd">2nd author</string>
-    <string name="settings_about_author_summary_2nd" translatable="false">duzhaokun123 &lt;duzhaokun2$outlook.com&gt;</string>
+    <string name="settings_about_author_summary_2nd" translatable="false">NekoInverter &lt;no email&gt;</string>
+    <string name="settings_about_author_3rd">3rd author</string>
+    <string name="settings_about_author_summary_3rd" translatable="false">duzhaokun123 &lt;duzhaokun2$outlook.com&gt;</string>
     <string name="settings_about_telegram">Telegram</string>
     <string name="settings_about_latest_release">Latest release</string>
     <string name="settings_about_website">Website</string>

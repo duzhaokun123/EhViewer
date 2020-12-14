@@ -13,9 +13,9 @@ An E-Hentai Application for Android.
 
 Ask [NekoInverter](https://gitlab.com/NekoInverter/EhViewer) for new functions and bugs (which are not leaded by my code) as first
 
-仅支持 API >= 29 的设备
+仅支持 API >= 29 Android 10 的设备
 
-Only support API >= 29
+Only support API >= 29 Android 10
 
 `GalleryActivity`正在重构, 不要反馈关于它的 Bug
 

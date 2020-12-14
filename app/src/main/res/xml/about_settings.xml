@@ -31,6 +31,12 @@
     <Preference
         android:key="author_2nd"
         android:title="@string/settings_about_author_2nd"
+        android:summary="@string/settings_about_author_summary_2nd"
+        app:iconSpaceReserved="false" />
+
+    <Preference
+        android:key="author_3rd"
+        android:title="@string/settings_about_author_3rd"
         app:iconSpaceReserved="false" />
 
     <com.hippo.preference.UrlPreference

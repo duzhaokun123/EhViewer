@@ -50,10 +50,10 @@ public class SolidScene extends BaseScene {
 //                    break;
 //                }
 //            case CHECK_STEP_ANALYTICS:
-//                if (EhUtils.needSignedIn(getContext2())) {
-//                    startScene(new Announcer(SignInScene.class).setArgs(args), true);
-//                    break;
-//                }
+                if (EhUtils.needSignedIn(getContext2())) {
+                    startScene(new Announcer(SignInScene.class).setArgs(args), true);
+                    break;
+                }
             case CHECK_STEP_SIGN_IN:
                 if (Settings.getSelectSite()) {
                     startScene(new Announcer(SelectSiteScene.class).setArgs(args), true);

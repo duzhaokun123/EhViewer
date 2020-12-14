@@ -132,7 +132,7 @@ public abstract class EhActivity extends AppCompatActivity {
         } else {
             Resources res = EhApplication.getInstance().getResources();
             Configuration configuration = res.getConfiguration();
-            locale = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ? configuration.getLocales().get(0) : configuration.locale;
+            locale = configuration.getLocales().get(0);
         }
 
         newBase = ContextLocalWrapper.wrap(newBase, locale);
