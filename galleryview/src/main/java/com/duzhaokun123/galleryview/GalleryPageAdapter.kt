@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -71,7 +70,8 @@ class GalleryPageAdapter(private val context: Context) : RecyclerView.Adapter<Ga
                 galleryViewListener?.onLongPressPage(index)
                 true
             }
-            scaleType = scaleMode.toImageViewScaleType()
+            maximumScale = 10F
+            minimumScale = 0.5F
         }
 
         var page = 0
@@ -188,7 +188,7 @@ class GalleryPageAdapter(private val context: Context) : RecyclerView.Adapter<Ga
         private fun onSetContent() {
             pv.let {
                 GlobalScope.launch(Dispatchers.Main) {
-                    it.setImageBitmap(content)
+                    content?.let { it1 -> it.setImageBitmap(it1, scaleMode) }
                 }
             }
         }
