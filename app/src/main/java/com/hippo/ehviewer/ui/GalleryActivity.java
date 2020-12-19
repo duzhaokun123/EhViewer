@@ -238,7 +238,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
     }
 
     @Override
-    protected void onSaveInstanceState(@Nullable Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(KEY_ACTION, mAction);
         outState.putString(KEY_FILENAME, mFilename);
@@ -359,7 +359,9 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
 
         mSize = mGalleryProvider.getSize();
         mCurrentIndex = startPage;
-        mLayoutMode = mGalleryView.getLayoutMode();
+        if (mGalleryView != null) {
+            mLayoutMode = mGalleryView.getLayoutMode();
+        }
         updateSlider();
 
         // Update keep screen on
@@ -874,30 +876,37 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
         if (requestCode == WRITE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             if (resultData != null) {
                 Uri uri = resultData.getData();
-                grantUriPermission(BuildConfig.APPLICATION_ID, uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                String filepath = getCacheDir() + "/" + mCacheFileName;
-                File cachefile = new File(filepath);
+                if (uri != null) {
+                    try {
+                        // grantUriPermission might throw RemoteException on MIUI
+                        grantUriPermission(BuildConfig.APPLICATION_ID, uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    } catch (Exception e) {
+                        ExceptionUtils.throwIfFatal(e);
+                        e.printStackTrace();
+                    }
+                    String filepath = getCacheDir() + "/" + mCacheFileName;
+                    File cachefile = new File(filepath);
 
-                InputStream is = null;
-                OutputStream os = null;
-                ContentResolver resolver = getContentResolver();
+                    InputStream is = null;
+                    OutputStream os = null;
+                    ContentResolver resolver = getContentResolver();
 
-                try {
-                    is = new FileInputStream(cachefile);
-                    os = resolver.openOutputStream(uri);
-                    IOUtils.copy(is, os);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    IOUtils.closeQuietly(is);
-                    IOUtils.closeQuietly(os);
+                    try {
+                        is = new FileInputStream(cachefile);
+                        os = resolver.openOutputStream(uri);
+                        IOUtils.copy(is, os);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        IOUtils.closeQuietly(is);
+                        IOUtils.closeQuietly(os);
+                    }
+
+                    //noinspection ResultOfMethodCallIgnored
+                    cachefile.delete();
+
+                    Toast.makeText(this, getString(R.string.image_saved, uri.getPath()), Toast.LENGTH_SHORT).show();
                 }
-
-                cachefile.delete();
-
-                Toast.makeText(this, getString(R.string.image_saved, uri.getPath()), Toast.LENGTH_SHORT).show();
-                // Sync media store
-                //sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
             }
         }
     }
@@ -959,7 +968,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
         private final Spinner mScreenRotation;
         private final Spinner mReadingDirection;
         private final Spinner mScaleMode;
-//        private final Spinner mStartPosition;
+        //        private final Spinner mStartPosition;
         private final Spinner mReadTheme;
         private final SwitchCompat mDoubleItem;
         private final SwitchCompat mKeepScreenOn;
@@ -1224,7 +1233,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
                 } else if (y >= y1 && y < y2) {
                     onTapSliderArea();
                 }
-            } else if (x >= x2 && x<= x3) {
+            } else if (x >= x2 && x <= x3) {
                 mGalleryView.pageRight();
             }
             return true;

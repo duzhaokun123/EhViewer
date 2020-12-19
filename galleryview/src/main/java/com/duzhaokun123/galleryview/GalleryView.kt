@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.annotation.IntDef
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import kotlinx.coroutines.Dispatchers

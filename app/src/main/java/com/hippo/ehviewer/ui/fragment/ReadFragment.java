@@ -22,7 +22,7 @@ import androidx.annotation.Nullable;
 
 import com.hippo.ehviewer.R;
 
-public class ReadFragment extends BaseSettingsFragment {
+public class ReadFragment extends BasePreferenceFragment {
 
     @Override
     public void onCreatePreferencesFix(@Nullable Bundle savedInstanceState, String rootKey) {
@@ -30,8 +30,7 @@ public class ReadFragment extends BaseSettingsFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        setTitle(R.string.settings_read);
+    public int getFragmentTitle() {
+        return R.string.settings_read;
     }
 }

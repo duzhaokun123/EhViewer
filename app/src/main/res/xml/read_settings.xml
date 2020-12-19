@@ -44,7 +44,7 @@
         app:entryValues="@array/page_scaling_entry_values"
         app:iconSpaceReserved="false" />
 
-    <com.takisoft.preferencex.SimpleMenuPreference
+<!--    <com.takisoft.preferencex.SimpleMenuPreference
         android:defaultValue="1"
         android:key="start_position"
         android:summary="%s"
@@ -52,7 +52,7 @@
         app:entries="@array/start_position_entries"
         app:entryValues="@array/start_position_values"
         app:iconSpaceReserved="false" />
-
+-->
     <com.takisoft.preferencex.SimpleMenuPreference
         android:defaultValue="1"
         android:key="read_theme"

@@ -438,7 +438,7 @@
     <string name="hosts">Custom hosts.txt</string>
     <string name="hosts_tip">hosts.txt</string>
     <string name="hosts_host">Host</string>
-    <string name="hosts_ip">IP</string>
+    <string name="hosts_ip">IP1(+IP2+IP3...)</string>
     <string name="add_host">Add a host</string>
     <string name="add_host_add">Add</string>
     <string name="edit_host">Edit the host</string>
@@ -601,6 +601,8 @@
     <string name="settings_advanced_built_in_hosts_summary">Apply the built-in host-to-IP mapping provided by the app.\nIt can be overridden by custom hosts.txt.</string>
     <string name="settings_advanced_dns_over_http_title">DNS over HTTPS</string>
     <string name="settings_advanced_dns_over_http_summary">Workaround DNS poisoning in some nations.</string>
+    <string name="settings_advanced_domain_fronting_title">Domain fronting</string>
+    <string name="settings_advanced_domain_fronting_summary">Bypass SNI blocking.</string>
     <string name="settings_advanced_custom_hosts_title">Custom hosts.txt</string>
     <string name="settings_advanced_custom_hosts_summary">Map hostnames to IP addresses.\nIt can override built-in hosts.txt.</string>
     <string name="settings_privacy_pattern_protection_title">Pattern protection</string>
@@ -620,7 +622,7 @@
     <string name="settings_about_author">Author</string>
     <string name="settings_about_author_summary" translatable="false">Hippo &lt;ehviewersu$gmail.com&gt;</string>
     <string name="settings_about_author_2nd">2nd author</string>
-    <string name="settings_about_author_summary_2nd" translatable="false">NekoInverter &lt;no email&gt;</string>
+    <string name="settings_about_author_summary_2nd" translatable="false">NekoInverter &lt;nekoworkshop$protonmail.com&gt;</string>
     <string name="settings_about_author_3rd">3rd author</string>
     <string name="settings_about_author_summary_3rd" translatable="false">duzhaokun123 &lt;duzhaokun2$outlook.com&gt;</string>
     <string name="settings_about_telegram">Telegram</string>

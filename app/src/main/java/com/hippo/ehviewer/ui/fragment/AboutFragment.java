@@ -28,9 +28,10 @@ import com.hippo.ehviewer.UrlOpener;
 import com.hippo.util.AppHelper;
 //import com.microsoft.appcenter.distribute.Distribute;
 
-public class AboutFragment extends BaseSettingsFragment {
+public class AboutFragment extends BasePreferenceFragment {
 
     private static final String KEY_AUTHOR = "author";
+    private static final String KEY_AUTHOR_2ND = "author_2nd";
     private static final String KEY_AUTHOR_3RD = "author_3rd";
     //private static final String KEY_DONATE = "donate";
     private static final String KEY_CHECK_FOR_UPDATES = "check_for_updates";
@@ -40,14 +41,17 @@ public class AboutFragment extends BaseSettingsFragment {
         addPreferencesFromResource(R.xml.about_settings);
 
         Preference author = findPreference(KEY_AUTHOR);
+        Preference author2nd = findPreference(KEY_AUTHOR_2ND);
         Preference author3rd = findPreference(KEY_AUTHOR_3RD);
         //Preference donate = findPreference(KEY_DONATE);
         Preference checkForUpdate = findPreference(KEY_CHECK_FOR_UPDATES);
 
         author.setSummary(getString(R.string.settings_about_author_summary).replace('$', '@'));
+        author2nd.setSummary(getString(R.string.settings_about_author_summary_2nd).replace('$', '@'));
         author3rd.setSummary(getString(R.string.settings_about_author_summary_3rd).replace('$', '@'));
 
         author.setOnPreferenceClickListener(this);
+        author2nd.setOnPreferenceClickListener(this);
         author3rd.setOnPreferenceClickListener(this);
         //donate.setOnPreferenceClickListener(this);
         checkForUpdate.setOnPreferenceClickListener(this);
@@ -61,8 +65,11 @@ public class AboutFragment extends BaseSettingsFragment {
         if (KEY_AUTHOR.equals(key)) {
             AppHelper.sendEmail(requireActivity(), EhApplication.getDeveloperEmail(),
                     "About EhViewer", null);
-        } else if (KEY_AUTHOR_3RD.equals(key)) {
+        } else if(KEY_AUTHOR_2ND.equals(key)) {
             AppHelper.sendEmail(requireActivity(), EhApplication.getDeveloper2ndEmail(),
+                    "About EhViewer", null);
+        }else if (KEY_AUTHOR_3RD.equals(key)) {
+            AppHelper.sendEmail(requireActivity(), EhApplication.getDeveloper3rdEmail(),
                     "About EhViewer", null);
         }
         else if (KEY_CHECK_FOR_UPDATES.equals(key)) {
@@ -73,8 +80,7 @@ public class AboutFragment extends BaseSettingsFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        setTitle(R.string.settings_about);
+    public int getFragmentTitle() {
+        return R.string.settings_about;
     }
 }

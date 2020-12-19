@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.core.util.Pair;
 
 import com.hippo.ehviewer.AppConfig;
+import com.hippo.ehviewer.EhApplication;
 import com.hippo.ehviewer.R;
 import com.hippo.util.ExceptionUtils;
 import com.hippo.util.IoThreadPoolExecutor;
@@ -221,9 +222,9 @@ public class EhTagDatabase {
         }
 
         String sha1Name = urls[0];
-        String sha1Url = urls[1] + "?_t=" + System.currentTimeMillis();
+        String sha1Url = urls[1];
         String dataName = urls[2];
-        String dataUrl = urls[3] + "?_t=" + System.currentTimeMillis();
+        String dataUrl = urls[3];
 
         // Clear tags if name if different
         EhTagDatabase tmp = instance;
@@ -259,6 +260,8 @@ public class EhTagDatabase {
                         FileUtils.delete(dataFile);
                     }
                 }
+
+                OkHttpClient client = EhApplication.getOkHttpClient(context);
 
                 // Save new sha1
                 File tempSha1File = new File(dir, sha1Name + ".tmp");

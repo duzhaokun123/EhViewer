@@ -31,7 +31,6 @@
     <Preference
         android:key="author_2nd"
         android:title="@string/settings_about_author_2nd"
-        android:summary="@string/settings_about_author_summary_2nd"
         app:iconSpaceReserved="false" />
 
     <Preference
