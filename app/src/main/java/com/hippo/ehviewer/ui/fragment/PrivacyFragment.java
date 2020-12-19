@@ -44,9 +44,9 @@ public class PrivacyFragment extends BasePreferenceFragment {
 //        }
 //        return true;
 //    }
-//
-//    @Override
-//    public int getFragmentTitle() {
-//        return R.string.settings_privacy;
-//    }
+
+    @Override
+    public int getFragmentTitle() {
+        return R.string.settings_privacy;
+    }
 }
