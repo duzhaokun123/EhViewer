@@ -64,6 +64,12 @@
 
     <SwitchPreferenceCompat
         android:defaultValue="false"
+        android:key="double_item"
+        android:title="@string/settings_read_double_item"
+        app:iconSpaceReserved="false" />
+
+    <SwitchPreferenceCompat
+        android:defaultValue="false"
         android:key="keep_screen_on"
         android:title="@string/settings_read_keep_screen_on"
         app:iconSpaceReserved="false" />

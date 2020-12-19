@@ -9,9 +9,13 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.annotation.IntDef
 import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class GalleryView @JvmOverloads constructor(
@@ -67,6 +71,8 @@ class GalleryView @JvmOverloads constructor(
     @Retention(AnnotationRetention.SOURCE)
     annotation class ScaleMode
 
+    private var needSetDoubleItemLater = true
+
     private val pb = findViewById<ProgressBar>(R.id.pb)!!
     private val tvError = findViewById<TextView>(R.id.tv_error)!!
     private val vp2 = findViewById<ViewPager2>(R.id.vp2)!!.apply {
@@ -79,6 +85,8 @@ class GalleryView @JvmOverloads constructor(
             })
         }
     }
+
+    private val vp2DefaultLM = (vp2.getChildAt(0) as RecyclerView).layoutManager
 
     @GalleryLayoutMode
     var galleryLayoutMode = LAYOUT_MODE_R2L
@@ -119,19 +127,22 @@ class GalleryView @JvmOverloads constructor(
             (vp2.adapter as GalleryPageAdapter).provider = provider
         }
 
-//    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
-//        super.onWindowFocusChanged(hasWindowFocus)
-//        if (hasWindowFocus) {
-//            vp2.apply {
-//                offscreenPageLimit = 1
-//                (getChildAt(0) as RecyclerView).apply {
-//                    val padding = vp2.width / 2
-//                    setPadding(padding, 0, 0, 0)
-//                    clipToPadding = false
-//                }
-//            }
-//        }
-//    }
+    var doubleItems = false
+        set(value) {
+            field = value
+            if (needSetDoubleItemLater)
+                GlobalScope.launch(Dispatchers.Main) {
+                    delay(80)
+                    onSetDoubleItem()
+                }
+            else
+                onSetDoubleItem()
+        }
+
+    override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
+        super.onWindowFocusChanged(hasWindowFocus)
+        needSetDoubleItemLater = false
+    }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
@@ -181,6 +192,7 @@ class GalleryView @JvmOverloads constructor(
     }
 
     private fun onSetGalleryLayoutMode() {
+        (vp2.getChildAt(0) as RecyclerView).layoutManager = vp2DefaultLM
         when (galleryLayoutMode) {
             LAYOUT_MODE_L2R -> {
                 vp2.orientation = ViewPager2.ORIENTATION_HORIZONTAL
@@ -191,6 +203,29 @@ class GalleryView @JvmOverloads constructor(
                 ViewCompat.setLayoutDirection(vp2, ViewCompat.LAYOUT_DIRECTION_RTL)
             }
             LAYOUT_MODE_T2B -> vp2.orientation = ViewPager2.ORIENTATION_VERTICAL
+        }
+    }
+
+    private fun onSetDoubleItem() {
+        vp2.apply {
+            offscreenPageLimit = 1
+            (getChildAt(0) as RecyclerView).apply {
+                if (doubleItems) {
+                    clipToPadding = false
+                    val padding = vp2.width / 2
+                    when (galleryLayoutMode) {
+                        LAYOUT_MODE_L2R -> setPadding(0, 0, padding, 0)
+                        LAYOUT_MODE_R2L -> setPadding(padding, 0, 0, 0)
+                        LAYOUT_MODE_T2B -> {
+                            setPadding(0, 0, 0, 0)
+                            layoutManager = GridLayoutManager(context, 2, GridLayoutManager.VERTICAL, false)
+                        }
+                    }
+                } else {
+                    setPadding(0, 0, 0, 0)
+                    clipToPadding = true
+                }
+            }
         }
     }
 

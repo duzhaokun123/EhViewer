@@ -300,6 +300,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
         mGalleryView.setScaleMode(Settings.getPageScaling());
         mGalleryView.setDefaultErrorString(resources.getString(R.string.error_unknown));
         mGalleryView.setPageTextColor(AttrResources.getAttrColor(this, android.R.attr.textColorSecondary));
+        mGalleryView.setDoubleItems(Settings.getReadDoubleItem());
         mGalleryView.setListener(this);
 
 //        mGLRootView = (GLRootView) ViewUtils.$$(this, R.id.gl_root_view);
@@ -958,8 +959,9 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
         private final Spinner mScreenRotation;
         private final Spinner mReadingDirection;
         private final Spinner mScaleMode;
-        private final Spinner mStartPosition;
+//        private final Spinner mStartPosition;
         private final Spinner mReadTheme;
+        private final SwitchCompat mDoubleItem;
         private final SwitchCompat mKeepScreenOn;
         private final SwitchCompat mShowClock;
         private final SwitchCompat mShowProgress;
@@ -976,8 +978,9 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             mScreenRotation = mView.findViewById(R.id.screen_rotation);
             mReadingDirection = mView.findViewById(R.id.reading_direction);
             mScaleMode = mView.findViewById(R.id.page_scaling);
-            mStartPosition = mView.findViewById(R.id.start_position);
+//            mStartPosition = mView.findViewById(R.id.start_position);
             mReadTheme = mView.findViewById(R.id.read_theme);
+            mDoubleItem = mView.findViewById(R.id.double_item);
             mKeepScreenOn = mView.findViewById(R.id.keep_screen_on);
             mShowClock = mView.findViewById(R.id.show_clock);
             mShowProgress = mView.findViewById(R.id.show_progress);
@@ -993,6 +996,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             mScaleMode.setSelection(Settings.getPageScaling());
 //            mStartPosition.setSelection(Settings.getStartPosition());
             mReadTheme.setSelection(Settings.getReadTheme());
+            mDoubleItem.setChecked(Settings.getReadDoubleItem());
             mKeepScreenOn.setChecked(Settings.getKeepScreenOn());
             mShowClock.setChecked(Settings.getShowClock());
             mShowProgress.setChecked(Settings.getShowProgress());
@@ -1022,6 +1026,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             int scaleMode = GalleryView.sanitizeScaleMode(mScaleMode.getSelectedItemPosition());
 //            int startPosition = GalleryView.sanitizeStartPosition(mStartPosition.getSelectedItemPosition());
             int readTheme = mReadTheme.getSelectedItemPosition();
+            boolean doubleItem = mDoubleItem.isChecked();
             boolean keepScreenOn = mKeepScreenOn.isChecked();
             boolean showClock = mShowClock.isChecked();
             boolean showProgress = mShowProgress.isChecked();
@@ -1040,6 +1045,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
             Settings.putPageScaling(scaleMode);
 //            Settings.putStartPosition(startPosition);
             Settings.putReadTheme(readTheme);
+            Settings.putReadDoubleItem(doubleItem);
             Settings.putKeepScreenOn(keepScreenOn);
             Settings.putShowClock(showClock);
             Settings.putShowProgress(showProgress);
@@ -1079,6 +1085,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
                     break;
             }
             mGalleryView.setGalleryLayoutMode(layoutMode);
+            mGalleryView.setDoubleItems(doubleItem);
             mGalleryView.setScaleMode(scaleMode);
 //            mGalleryView.setStartPosition(startPosition);
             if (keepScreenOn) {

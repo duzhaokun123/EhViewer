@@ -178,6 +178,8 @@ public class Settings {
     private static final boolean DEFAULT_DOWNLOAD_ORIGIN_IMAGE = false;
     private static final String KEY_READ_THEME = "read_theme";
     private static final int DEFAULT_READ_THEME = 1;
+    private static final String KEY_READ_DOUBLE_ITEM = "double_item";
+    private static final boolean DEFAULT_READ_DOUBLE_ITEM = false;
     /********************
      ****** Favorites
      ********************/
@@ -708,6 +710,14 @@ public class Settings {
 
     public static void putReadTheme(int value) {
         putIntToStr(KEY_READ_THEME, value);
+    }
+
+    public static boolean getReadDoubleItem() {
+        return getBoolean(KEY_READ_DOUBLE_ITEM, DEFAULT_READ_DOUBLE_ITEM);
+    }
+
+    public static void putReadDoubleItem(boolean value) {
+        putBoolean(KEY_READ_DOUBLE_ITEM, value);
     }
 
     public static boolean getEnabledSecurity() {

@@ -101,7 +101,7 @@
 
             </LinearLayout>
 
-            <LinearLayout
+<!--            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
@@ -123,7 +123,7 @@
                     android:entries="@array/start_position_entries" />
 
             </LinearLayout>
-
+        -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -153,6 +153,13 @@
             android:layout_height="wrap_content"
             android:paddingTop="@dimen/keyline_margin"
             android:orientation="vertical">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/double_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_read_double_item"
+                android:textColor="?android:attr/textColorPrimary" />
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/keep_screen_on"

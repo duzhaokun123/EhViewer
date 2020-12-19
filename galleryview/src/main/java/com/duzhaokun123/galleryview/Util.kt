@@ -8,7 +8,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.max
 import kotlin.math.min
+
+const val DEFAULT_MAX_SCALE = 10F
+const val DEFAULT_MIN_SCALE = 0.5F
 
 fun PhotoView.setImageBitmap(bm: Bitmap, @GalleryView.ScaleMode scaleMode: Int) {
     val tag = "PhotoView"
@@ -33,10 +37,8 @@ fun PhotoView.setImageBitmap(bm: Bitmap, @GalleryView.ScaleMode scaleMode: Int) 
                     }
                 }
         Log.d(tag, "setImageBitmap: scale $scale")
-        try {
-            this@setImageBitmap.scale = scale
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        this@setImageBitmap.maximumScale = max(DEFAULT_MAX_SCALE, scale)
+        this@setImageBitmap.minimumScale = min(DEFAULT_MIN_SCALE, scale)
+        this@setImageBitmap.scale = scale
     }
 }
