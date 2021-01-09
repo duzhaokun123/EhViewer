@@ -19,13 +19,13 @@ package com.hippo.ehviewer.ui.scene;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import androidx.annotation.DrawableRes;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.widget.Toolbar;
@@ -40,20 +40,20 @@ public abstract class ToolbarScene extends BaseScene {
     private CharSequence mTempTitle;
 
     @Nullable
-    public View onCreateView3(LayoutInflater inflater,
-                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateViewWithToolbar(LayoutInflater inflater,
+                                        @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         return null;
     }
 
     @Nullable
     @Override
-    public final View onCreateView2(LayoutInflater inflater,
-                                    @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public final View onCreateView(@NonNull LayoutInflater inflater,
+                                   @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.scene_toolbar, container, false);
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         FrameLayout contentPanel = view.findViewById(R.id.content_panel);
 
-        View contentView = onCreateView3(inflater, contentPanel, savedInstanceState);
+        View contentView = onCreateViewWithToolbar(inflater, contentPanel, savedInstanceState);
         if (contentView == null) {
             return null;
         } else {
@@ -82,18 +82,19 @@ public abstract class ToolbarScene extends BaseScene {
             if (menuResId != 0) {
                 mToolbar.inflateMenu(menuResId);
                 mToolbar.setOnMenuItemClickListener(ToolbarScene.this::onMenuItemClick);
-                onMenuCreated(mToolbar.getMenu());
             }
             mToolbar.setNavigationOnClickListener(v -> onNavigationClick());
         }
-        setWhiteStatusBar(false);
     }
+
+    @Override
+    public boolean needWhiteStatusBar() {
+        return false;
+    }
+
 
     public int getMenuResId() {
         return 0;
-    }
-
-    public void onMenuCreated(Menu menu) {
     }
 
     public boolean onMenuItemClick(MenuItem item) {

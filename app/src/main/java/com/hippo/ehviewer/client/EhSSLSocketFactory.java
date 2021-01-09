@@ -3,6 +3,7 @@ package com.hippo.ehviewer.client;
 import android.util.Log;
 
 import com.hippo.ehviewer.Settings;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;

@@ -35,6 +35,7 @@ import android.widget.TextView;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -105,10 +106,12 @@ public class SearchLayout extends EasyRecyclerView implements CompoundButton.OnC
 
         mLayoutManager = new SearchLayoutManager(context);
         mAdapter = new SearchAdapter();
+        mAdapter.setHasStableIds(true);
         setLayoutManager(mLayoutManager);
         setAdapter(mAdapter);
         setHasFixedSize(true);
         setClipToPadding(false);
+        ((DefaultItemAnimator) getItemAnimator()).setSupportsChangeAnimations(false);
         int interval = resources.getDimensionPixelOffset(R.dimen.search_layout_interval);
         int paddingH = resources.getDimensionPixelOffset(R.dimen.search_layout_margin_h);
         int paddingV = resources.getDimensionPixelOffset(R.dimen.search_layout_margin_v);
@@ -125,7 +128,7 @@ public class SearchLayout extends EasyRecyclerView implements CompoundButton.OnC
         mNormalSearchModeHelp = normalView.findViewById(R.id.normal_search_mode_help);
         mEnableAdvanceSwitch = normalView.findViewById(R.id.search_enable_advance);
         mNormalSearchModeHelp.setOnClickListener(this);
-        mEnableAdvanceSwitch.setOnCheckedChangeListener(SearchLayout.this);
+        mEnableAdvanceSwitch.setOnCheckedChangeListener(this);
         mEnableAdvanceSwitch.setSwitchPadding(resources.getDimensionPixelSize(R.dimen.switch_padding));
 
         // Create advance view
@@ -138,6 +141,9 @@ public class SearchLayout extends EasyRecyclerView implements CompoundButton.OnC
 
         // Create action view
         mActionView = mInflater.inflate(R.layout.search_action, null);
+        mActionView.setLayoutParams(new RecyclerView.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
         mAction = mActionView.findViewById(R.id.action);
         mAction.addOnTabSelectedListener(this);
     }
@@ -207,18 +213,21 @@ public class SearchLayout extends EasyRecyclerView implements CompoundButton.OnC
     @Override
     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
         if (buttonView == mEnableAdvanceSwitch) {
-            mEnableAdvance = isChecked;
-            if (mSearchMode == SEARCH_MODE_NORMAL) {
-                if (isChecked) {
-                    mAdapter.notifyItemInserted(1);
-                } else {
-                    mAdapter.notifyItemRemoved(1);
-                }
+            post(() -> {
+                mEnableAdvance = isChecked;
+                if (mSearchMode == SEARCH_MODE_NORMAL) {
+                    if (mEnableAdvance) {
+                        mAdapter.notifyItemInserted(1);
+                    } else {
+                        mAdapter.notifyItemRemoved(1);
+                    }
 
-                if (mHelper != null) {
-                    mHelper.onChangeSearchMode();
+                    if (mHelper != null) {
+                        mHelper.onChangeSearchMode();
+                    }
                 }
-            }
+            });
+
         }
     }
 
@@ -274,17 +283,12 @@ public class SearchLayout extends EasyRecyclerView implements CompoundButton.OnC
         post(() -> {
             int oldItemCount = mAdapter.getItemCount();
 
-            mSearchMode++;
-            if (mSearchMode > SEARCH_MODE_IMAGE) {
-                mSearchMode = SEARCH_MODE_NORMAL;
-            }
+            mSearchMode = tab.getPosition();
 
             int newItemCount = mAdapter.getItemCount();
 
             mAdapter.notifyItemRangeRemoved(0, oldItemCount - 1);
             mAdapter.notifyItemRangeInserted(0, newItemCount - 1);
-
-            mSearchMode = tab.getPosition();
 
             if (mHelper != null) {
                 mHelper.onChangeSearchMode();
@@ -346,9 +350,6 @@ public class SearchLayout extends EasyRecyclerView implements CompoundButton.OnC
 
             if (viewType == ITEM_TYPE_ACTION) {
                 ViewUtils.removeFromParent(mActionView);
-                mActionView.setLayoutParams(new RecyclerView.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT));
                 view = mActionView;
             } else {
                 view = mInflater.inflate(R.layout.search_category, parent, false);
@@ -381,6 +382,15 @@ public class SearchLayout extends EasyRecyclerView implements CompoundButton.OnC
             if (holder.getItemViewType() == ITEM_TYPE_ACTION) {
                 mAction.selectTab(mAction.getTabAt(mSearchMode));
             }
+        }
+
+        @Override
+        public long getItemId(int position) {
+            int type = SEARCH_ITEM_TYPE[mSearchMode][position];
+            if (mSearchMode == SEARCH_MODE_NORMAL && position == 1 && !mEnableAdvance) {
+                type = ITEM_TYPE_ACTION;
+            }
+            return type;
         }
     }
 

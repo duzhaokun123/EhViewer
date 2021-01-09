@@ -16,10 +16,7 @@
 
 package com.hippo.ehviewer.ui.scene;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -40,6 +37,7 @@ import com.hippo.ehviewer.UrlOpener;
 import com.hippo.ehviewer.client.EhUrl;
 import com.hippo.ehviewer.client.EhUtils;
 import com.hippo.ehviewer.client.data.GalleryDetail;
+import com.hippo.util.ClipboardUtil;
 import com.hippo.yorozuya.AssertUtils;
 import com.hippo.yorozuya.LayoutUtils;
 import com.hippo.yorozuya.ViewUtils;
@@ -89,51 +87,49 @@ public final class GalleryInfoScene extends ToolbarScene {
             return;
         }
 
-        Resources resources = getResources2();
-        AssertUtils.assertNotNull(resources);
-        mKeys.add(resources.getString(R.string.header_key));
-        mValues.add(resources.getString(R.string.header_value));
-        mKeys.add(resources.getString(R.string.key_gid));
+        mKeys.add(getString(R.string.header_key));
+        mValues.add(getString(R.string.header_value));
+        mKeys.add(getString(R.string.key_gid));
         mValues.add(Long.toString(gd.gid));
-        mKeys.add(resources.getString(R.string.key_token));
+        mKeys.add(getString(R.string.key_token));
         mValues.add(gd.token);
-        mKeys.add(resources.getString(R.string.key_url));
+        mKeys.add(getString(R.string.key_url));
         mValues.add(EhUrl.getGalleryDetailUrl(gd.gid, gd.token));
-        mKeys.add(resources.getString(R.string.key_title));
+        mKeys.add(getString(R.string.key_title));
         mValues.add(gd.title);
-        mKeys.add(resources.getString(R.string.key_title_jpn));
+        mKeys.add(getString(R.string.key_title_jpn));
         mValues.add(gd.titleJpn);
-        mKeys.add(resources.getString(R.string.key_thumb));
+        mKeys.add(getString(R.string.key_thumb));
         mValues.add(gd.thumb);
-        mKeys.add(resources.getString(R.string.key_category));
+        mKeys.add(getString(R.string.key_category));
         mValues.add(EhUtils.getCategory(gd.category));
-        mKeys.add(resources.getString(R.string.key_uploader));
+        mKeys.add(getString(R.string.key_uploader));
         mValues.add(gd.uploader);
-        mKeys.add(resources.getString(R.string.key_posted));
+        mKeys.add(getString(R.string.key_posted));
         mValues.add(gd.posted);
-        mKeys.add(resources.getString(R.string.key_parent));
+        mKeys.add(getString(R.string.key_parent));
         mValues.add(gd.parent);
-        mKeys.add(resources.getString(R.string.key_visible));
+        mKeys.add(getString(R.string.key_visible));
         mValues.add(gd.visible);
-        mKeys.add(resources.getString(R.string.key_language));
+        mKeys.add(getString(R.string.key_language));
         mValues.add(gd.language);
-        mKeys.add(resources.getString(R.string.key_pages));
+        mKeys.add(getString(R.string.key_pages));
         mValues.add(Integer.toString(gd.pages));
-        mKeys.add(resources.getString(R.string.key_size));
+        mKeys.add(getString(R.string.key_size));
         mValues.add(gd.size);
-        mKeys.add(resources.getString(R.string.key_favorite_count));
+        mKeys.add(getString(R.string.key_favorite_count));
         mValues.add(Integer.toString(gd.favoriteCount));
-        mKeys.add(resources.getString(R.string.key_favorited));
+        mKeys.add(getString(R.string.key_favorited));
         mValues.add(Boolean.toString(gd.isFavorited));
-        mKeys.add(resources.getString(R.string.key_rating_count));
+        mKeys.add(getString(R.string.key_rating_count));
         mValues.add(Integer.toString(gd.ratingCount));
-        mKeys.add(resources.getString(R.string.key_rating));
+        mKeys.add(getString(R.string.key_rating));
         mValues.add(Float.toString(gd.rating));
-        mKeys.add(resources.getString(R.string.key_torrents));
+        mKeys.add(getString(R.string.key_torrents));
         mValues.add(Integer.toString(gd.torrentCount));
-        mKeys.add(resources.getString(R.string.key_torrent_url));
+        mKeys.add(getString(R.string.key_torrent_url));
         mValues.add(gd.torrentUrl);
-        mKeys.add(resources.getString(R.string.favorite_name));
+        mKeys.add(getString(R.string.favorite_name));
         mValues.add(gd.favoriteName);
     }
 
@@ -149,18 +145,18 @@ public final class GalleryInfoScene extends ToolbarScene {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putStringArrayList(KEY_KEYS, mKeys);
         outState.putStringArrayList(KEY_VALUES, mValues);
     }
 
     @Override
-    public View onCreateView3(LayoutInflater inflater,
-                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateViewWithToolbar(LayoutInflater inflater,
+                                        @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.scene_gallery_info, container, false);
 
-        Context context = getContext2();
+        Context context = getContext();
         AssertUtils.assertNotNull(context);
 
         mRecyclerView = (EasyRecyclerView) ViewUtils.$$(view, R.id.recycler_view);
@@ -198,13 +194,12 @@ public final class GalleryInfoScene extends ToolbarScene {
     }
 
     public boolean onItemClick(int position) {
-        Context context = getContext2();
+        Context context = getContext();
         if (null != context && 0 != position && null != mValues) {
             if (position == INDEX_PARENT) {
                 UrlOpener.openUrl(context, mValues.get(position), true);
             } else {
-                ClipboardManager cmb = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-                cmb.setPrimaryClip(ClipData.newPlainText(null, mValues.get(position)));
+                ClipboardUtil.addTextToClipboard(mValues.get(position));
 
                 if (position == INDEX_URL) {
                     // Save it to avoid detect the gallery
@@ -245,7 +240,7 @@ public final class GalleryInfoScene extends ToolbarScene {
         private final LayoutInflater mInflater;
 
         public InfoAdapter() {
-            mInflater = getLayoutInflater2();
+            mInflater = getLayoutInflater();
             AssertUtils.assertNotNull(mInflater);
         }
 
@@ -258,14 +253,15 @@ public final class GalleryInfoScene extends ToolbarScene {
             }
         }
 
+        @NonNull
         @Override
-        public InfoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public InfoHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             return new InfoHolder(mInflater.inflate(viewType == TYPE_HEADER ?
                     R.layout.item_gallery_info_header : R.layout.item_gallery_info_data, parent, false));
         }
 
         @Override
-        public void onBindViewHolder(InfoHolder holder, int position) {
+        public void onBindViewHolder(@NonNull InfoHolder holder, int position) {
             if (mKeys != null && mValues != null) {
                 holder.key.setText(mKeys.get(position));
                 holder.value.setText(mValues.get(position));

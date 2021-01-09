@@ -42,7 +42,9 @@ import com.hippo.ehviewer.client.EhClient;
 import com.hippo.ehviewer.client.EhCookieStore;
 import com.hippo.ehviewer.client.EhDns;
 import com.hippo.ehviewer.client.EhEngine;
+import com.hippo.ehviewer.client.EhRequestBuilder;
 import com.hippo.ehviewer.client.EhSSLSocketFactory;
+import com.hippo.ehviewer.client.EhUrl;
 import com.hippo.ehviewer.client.EhX509TrustManager;
 import com.hippo.ehviewer.client.data.GalleryDetail;
 import com.hippo.ehviewer.download.DownloadManager;
@@ -54,6 +56,7 @@ import com.hippo.network.StatusCodeException;
 import com.hippo.text.Html;
 import com.hippo.unifile.UniFile;
 import com.hippo.util.BitmapUtils;
+import com.hippo.util.ClipboardUtil;
 import com.hippo.util.ExceptionUtils;
 import com.hippo.util.IoThreadPoolExecutor;
 import com.hippo.util.ReadableTime;
@@ -63,6 +66,7 @@ import com.hippo.yorozuya.OSUtils;
 import com.hippo.yorozuya.SimpleHandler;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,7 +80,10 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import okhttp3.Cache;
+import okhttp3.Call;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class EhApplication extends RecordingApplication {
 
@@ -150,6 +157,15 @@ public class EhApplication extends RecordingApplication {
                     .cache(getOkHttpCache(application))
                     .hostnameVerifier((hostname, session) -> true)
                     .dns(new EhDns(application))
+                    .addNetworkInterceptor(chain -> {
+                        try {
+                            return chain.proceed(chain.request());
+                        } catch (NullPointerException e) {
+                            // crash on meizu devices due to old Android version
+                            // https://github.com/square/okhttp/issues/3301#issuecomment-348415095
+                            throw new IOException(e.getMessage());
+                        }
+                    })
                     .proxySelector(getEhProxySelector(application));
             try {
                 TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
@@ -275,7 +291,7 @@ public class EhApplication extends RecordingApplication {
 
     @NonNull
     public static String getDeveloperEmail() {
-        return "nekoworkshop$protonmail.com".replace('$', '@');
+        return "ehviewersu$gmail.com".replace('$', '@');
     }
 
     @NonNull
@@ -310,6 +326,7 @@ public class EhApplication extends RecordingApplication {
 
         super.onCreate();
 
+        ClipboardUtil.initialize(this);
         GetText.initialize(this);
         StatusCodeException.initialize(this);
         Settings.initialize(this);
@@ -378,6 +395,25 @@ public class EhApplication extends RecordingApplication {
         }
 
         initialized = true;
+        theDawnOfNewDay();
+    }
+
+    private void theDawnOfNewDay() {
+        EhCookieStore store = getEhCookieStore(this);
+        HttpUrl eh = HttpUrl.get(EhUrl.HOST_E);
+
+        if (store.contains(eh, EhCookieStore.KEY_IPD_MEMBER_ID) || store.contains(eh, EhCookieStore.KEY_IPD_PASS_HASH)) {
+            IoThreadPoolExecutor.getInstance().execute(() -> {
+                String referer = EhUrl.REFERER_E;
+                Request request = new EhRequestBuilder(EhUrl.HOST_E + "news.php", referer).build();
+                Call call = getOkHttpClient(this).newCall(request);
+                try {
+                    call.execute();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 
     private void clearTempDir() {

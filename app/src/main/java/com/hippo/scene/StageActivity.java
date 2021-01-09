@@ -17,6 +17,7 @@
 package com.hippo.scene;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -293,6 +294,7 @@ public abstract class StageActivity extends EhActivity {
 
                     // Remove tag from index i+1
                     mSceneTagList.subList(i + 1, mSceneTagList.size()).clear();
+                    mDelaySceneTagList.subList(i + 1, mDelaySceneTagList.size()).clear();
 
                     // Attach fragment
                     if (fragment.isDetached()) {
@@ -556,11 +558,16 @@ public abstract class StageActivity extends EhActivity {
         FragmentManager fragmentManager = getSupportFragmentManager();
         Fragment fragment = fragmentManager.findFragmentByTag(tag);
 
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.detach(fragment);
-        transaction.attach(fragment);
-        transaction.commitAllowingStateLoss();
-        onTransactScene();
+        if (fragment == null) {
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            fragmentManager.beginTransaction().detach(fragment).commitAllowingStateLoss();
+            fragmentManager.beginTransaction().attach(fragment).commitAllowingStateLoss();
+        } else {
+            fragmentManager.beginTransaction().detach(fragment).attach(fragment).commitAllowingStateLoss();
+        }
     }
 
     @Override

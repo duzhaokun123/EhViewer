@@ -26,7 +26,8 @@
     <Preference
         android:key="author"
         android:title="@string/settings_about_author"
-        app:iconSpaceReserved="false" />
+        app:iconSpaceReserved="false"
+        app:enableCopying="true" />
 
     <Preference
         android:key="author_2nd"
@@ -73,13 +74,6 @@
         android:title="@string/settings_about_help"
         app:iconSpaceReserved="false"
         app:url="http://www.ehviewer.com/help" />-->
-
-    <com.hippo.preference.ActivityPreference
-        android:key="license"
-        android:summary="@string/settings_about_license_summary"
-        android:title="@string/settings_about_license"
-        app:activity="com.google.android.gms.oss.licenses.OssLicensesMenuActivity"
-        app:iconSpaceReserved="false" />
 
     <com.hippo.ehviewer.preference.VersionPreference
         android:key="version"

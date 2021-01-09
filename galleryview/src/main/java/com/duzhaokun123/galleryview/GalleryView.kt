@@ -211,7 +211,7 @@ class GalleryView @JvmOverloads constructor(
             (getChildAt(0) as RecyclerView).apply {
                 if (doubleItems) {
                     clipToPadding = false
-                    val padding = vp2.width / 2
+                    val padding = this@GalleryView.width / 2
                     when (galleryLayoutMode) {
                         LAYOUT_MODE_L2R -> setPadding(0, 0, padding, 0)
                         LAYOUT_MODE_R2L -> setPadding(padding, 0, 0, 0)

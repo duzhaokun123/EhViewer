@@ -16,15 +16,11 @@
 
 package com.hippo.ehviewer.ui.scene;
 
-import android.content.ClipData;
-import android.content.ClipDescription;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -41,6 +38,8 @@ import com.hippo.ehviewer.R;
 import com.hippo.ehviewer.client.EhCookieStore;
 import com.hippo.ehviewer.client.EhUrl;
 import com.hippo.ehviewer.client.EhUtils;
+import com.hippo.util.ClipboardUtil;
+import com.hippo.util.ExceptionUtils;
 import com.hippo.yorozuya.AssertUtils;
 import com.hippo.yorozuya.ViewUtils;
 
@@ -68,8 +67,6 @@ public class CookieSignInScene extends SolidScene implements EditText.OnEditorAc
     private View mOk;
     @Nullable
     private TextView mFromClipboard;
-    @Nullable
-    private ClipboardManager clipboardManager;
 
     // false for error
     private static boolean checkIpbMemberId(String id) {
@@ -108,8 +105,8 @@ public class CookieSignInScene extends SolidScene implements EditText.OnEditorAc
 
     @Nullable
     @Override
-    public View onCreateView2(LayoutInflater inflater,
-                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.scene_cookie_sign_in, container, false);
         mIpbMemberIdLayout = (TextInputLayout) ViewUtils.$$(view, R.id.ipb_member_id_layout);
         mIpbMemberId = mIpbMemberIdLayout.getEditText();
@@ -131,7 +128,7 @@ public class CookieSignInScene extends SolidScene implements EditText.OnEditorAc
         mFromClipboard.setOnClickListener(this);
 
         // Try to get old version cookie info
-        Context context = getContext2();
+        Context context = getContext();
         AssertUtils.assertNotNull(context);
         SharedPreferences sharedPreferences = context.getSharedPreferences("eh_info", 0);
         String ipbMemberId = sharedPreferences.getString("ipb_member_id", null);
@@ -160,7 +157,6 @@ public class CookieSignInScene extends SolidScene implements EditText.OnEditorAc
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        clipboardManager = (ClipboardManager) requireActivity().getSystemService(Context.CLIPBOARD_SERVICE);
         showSoftInput(mIpbMemberId);
     }
 
@@ -194,7 +190,7 @@ public class CookieSignInScene extends SolidScene implements EditText.OnEditorAc
     }
 
     public void enter() {
-        Context context = getContext2();
+        Context context = getContext();
         if (null == context || null == mIpbMemberIdLayout || null == mIpbPassHashLayout ||
                 null == mIgneousLayout || null == mIpbMemberId || null == mIpbPassHash ||
                 null == mIgneous) {
@@ -237,7 +233,7 @@ public class CookieSignInScene extends SolidScene implements EditText.OnEditorAc
     }
 
     private void storeCookie(String id, String hash, String igneous) {
-        Context context = getContext2();
+        Context context = getContext();
         if (null == context) {
             return;
         }
@@ -257,65 +253,60 @@ public class CookieSignInScene extends SolidScene implements EditText.OnEditorAc
 
     private void fillCookiesFromClipboard() {
         hideSoftInput();
+        String text = ClipboardUtil.getTextFromClipboard();
+        if (text == null) {
+            showTip(R.string.from_clipboard_error, LENGTH_SHORT);
+            return;
+        }
         try {
-            String pasteData;
-            if (!clipboardManager.hasPrimaryClip()/* || !clipboardManager.getPrimaryClipDescription().hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN)*/) {
-                showTip(R.string.from_clipboard_error, LENGTH_SHORT);
+            String[] kvs;
+            if (text.contains(";")) {
+                kvs = text.split(";");
+            } else if (text.contains("\n")) {
+                kvs = text.split("\n");
             } else {
-                ClipData.Item item = clipboardManager.getPrimaryClip().getItemAt(0);
-                pasteData = String.valueOf(item.coerceToText(requireContext()));
-                if (!TextUtils.isEmpty(pasteData)) {
-                    String[] kvs;
-                    if (pasteData.contains(";")) {
-                        kvs = pasteData.split(";");
-                    } else if (pasteData.contains("\n")) {
-                        kvs = pasteData.split("\n");
-                    } else {
-                        showTip(R.string.from_clipboard_error, LENGTH_SHORT);
-                        return;
-                    }
-                    if (kvs.length < 3) {
-                        showTip(R.string.from_clipboard_error, LENGTH_SHORT);
-                        return;
-                    }
-                    for (String s : kvs) {
-                        String[] kv;
-                        if (s.contains("=")) {
-                            kv = s.split("=");
-                        } else if (s.contains(":")) {
-                            kv = s.split(":");
-                        } else {
-                            continue;
-                        }
-                        if (kv.length != 2) {
-                            continue;
-                        }
-                        switch (kv[0].trim().toLowerCase()) {
-                            case "ipb_member_id":
-                                if (mIpbMemberId != null) {
-                                    mIpbMemberId.setText(kv[1].trim());
-                                }
-                                break;
-                            case "ipb_pass_hash":
-                                if (mIpbPassHash != null) {
-                                    mIpbPassHash.setText(kv[1].trim());
-                                }
-                                break;
-                            case "igneous":
-                                if (mIgneous != null) {
-                                    mIgneous.setText(kv[1].trim());
-                                }
-                                break;
-                        }
-                    }
-                    enter();
+                showTip(R.string.from_clipboard_error, LENGTH_SHORT);
+                return;
+            }
+            if (kvs.length < 3) {
+                showTip(R.string.from_clipboard_error, LENGTH_SHORT);
+                return;
+            }
+            for (String s : kvs) {
+                String[] kv;
+                if (s.contains("=")) {
+                    kv = s.split("=");
+                } else if (s.contains(":")) {
+                    kv = s.split(":");
                 } else {
-                    showTip(R.string.from_clipboard_error, LENGTH_SHORT);
+                    continue;
+                }
+                if (kv.length != 2) {
+                    continue;
+                }
+                switch (kv[0].trim().toLowerCase()) {
+                    case "ipb_member_id":
+                        if (mIpbMemberId != null) {
+                            mIpbMemberId.setText(kv[1].trim());
+                        }
+                        break;
+                    case "ipb_pass_hash":
+                        if (mIpbPassHash != null) {
+                            mIpbPassHash.setText(kv[1].trim());
+                        }
+                        break;
+                    case "igneous":
+                        if (mIgneous != null) {
+                            mIgneous.setText(kv[1].trim());
+                        }
+                        break;
                 }
             }
+            enter();
         } catch (Exception e) {
-            showTip(R.string.from_clipboard_error, LENGTH_SHORT);
+            ExceptionUtils.throwIfFatal(e);
             e.printStackTrace();
+            showTip(R.string.from_clipboard_error, LENGTH_SHORT);
         }
     }
 }

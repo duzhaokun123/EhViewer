@@ -51,6 +51,10 @@ import com.hippo.yorozuya.IOUtils;
 import com.hippo.yorozuya.ObjectUtils;
 import com.hippo.yorozuya.collect.SparseJLArray;
 
+import org.greenrobot.greendao.AbstractDao;
+import org.greenrobot.greendao.query.CloseableListIterator;
+import org.greenrobot.greendao.query.LazyList;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -59,10 +63,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import de.greenrobot.dao.AbstractDao;
-import de.greenrobot.dao.query.CloseableListIterator;
-import de.greenrobot.dao.query.LazyList;
 
 public class EhDB {
 
@@ -78,7 +78,11 @@ public class EhDB {
     private static void upgradeDB(SQLiteDatabase db, int oldVersion) {
         switch (oldVersion) {
             case 1: // 1 to 2, add FILTER
-                FilterDao.createTable(db, true);
+                db.execSQL("CREATE TABLE IF NOT EXISTS \"FILTER\" (" + //
+                        "\"_id\" INTEGER PRIMARY KEY ," + // 0: id
+                        "\"MODE\" INTEGER NOT NULL ," + // 1: mode
+                        "\"TEXT\" TEXT," + // 2: text
+                        "\"ENABLE\" INTEGER);"); // 3: enable
             case 2: // 2 to 3, add ENABLE column to table FILTER
                 db.execSQL("CREATE TABLE " + "\"FILTER2\" (" +
                         "\"_id\" INTEGER PRIMARY KEY ," +
@@ -595,9 +599,20 @@ public class EhDB {
         return sDaoSession.getFilterDao().queryBuilder().list();
     }
 
-    public static synchronized void addFilter(Filter filter) {
-        filter.setId(null);
-        filter.setId(sDaoSession.getFilterDao().insert(filter));
+    public static synchronized boolean addFilter(Filter filter) {
+        Filter existFilter;
+        try {
+            existFilter = sDaoSession.getFilterDao().queryBuilder().where(FilterDao.Properties.Text.eq(filter.text), FilterDao.Properties.Mode.eq(filter.mode)).unique();
+        } catch (Exception e) {
+            existFilter = null;
+        }
+        if (existFilter == null) {
+            filter.setId(null);
+            filter.setId(sDaoSession.getFilterDao().insert(filter));
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public static synchronized void deleteFilter(Filter filter) {
@@ -645,7 +660,7 @@ public class EhDB {
                     return false;
                 if (!copyDao(sDaoSession.getLocalFavoritesDao(), exportSession.getLocalFavoritesDao()))
                     return false;
-                if (!copyDao(sDaoSession.getBookmarksBao(), exportSession.getBookmarksBao()))
+                if (!copyDao(sDaoSession.getBookmarksDao(), exportSession.getBookmarksDao()))
                     return false;
                 if (!copyDao(sDaoSession.getFilterDao(), exportSession.getFilterDao()))
                     return false;
@@ -677,7 +692,6 @@ public class EhDB {
     }
 
     /**
-     * @param file The db file
      * @return error string, null for no error
      */
     public static synchronized String importDB(Context context, Uri uri) {

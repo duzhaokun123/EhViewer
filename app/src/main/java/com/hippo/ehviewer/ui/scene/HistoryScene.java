@@ -16,6 +16,7 @@
 
 package com.hippo.ehviewer.ui.scene;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -79,11 +80,11 @@ import com.hippo.widget.recyclerview.AutoStaggeredGridLayoutManager;
 import com.hippo.yorozuya.AssertUtils;
 import com.hippo.yorozuya.ViewUtils;
 
+import org.greenrobot.greendao.query.LazyList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import de.greenrobot.dao.query.LazyList;
 
 public class HistoryScene extends ToolbarScene {
 
@@ -120,7 +121,7 @@ public class HistoryScene extends ToolbarScene {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Context context = getContext2();
+        Context context = getContext();
         assert context != null;
         mDownloadManager = EhApplication.getDownloadManager(context);
         mDownloadManager = EhApplication.getDownloadManager(context);
@@ -183,8 +184,8 @@ public class HistoryScene extends ToolbarScene {
 
     @Nullable
     @Override
-    public View onCreateView3(LayoutInflater inflater,
-                              @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateViewWithToolbar(LayoutInflater inflater,
+                                        @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.scene_history, container, false);
         View content = ViewUtils.$$(view, R.id.content);
         mRecyclerView = (EasyRecyclerView) ViewUtils.$$(content, R.id.recycler_view);
@@ -192,7 +193,7 @@ public class HistoryScene extends ToolbarScene {
         TextView tip = (TextView) ViewUtils.$$(view, R.id.tip);
         mViewTransition = new ViewTransition(content, tip);
 
-        Context context = getContext2();
+        Context context = getContext();
         AssertUtils.assertNotNull(context);
         Resources resources = context.getResources();
 
@@ -246,7 +247,7 @@ public class HistoryScene extends ToolbarScene {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setTitle(R.string.history);
-        setNavigationIcon(new DrawerArrowDrawable(getContext2(), Color.WHITE));
+        setNavigationIcon(new DrawerArrowDrawable(getContext(), Color.WHITE));
     }
 
     @Override
@@ -290,6 +291,7 @@ public class HistoryScene extends ToolbarScene {
         }
     }
 
+    @SuppressLint("RtlHardcoded")
     @Override
     public void onNavigationClick() {
         toggleDrawer(Gravity.LEFT);
@@ -301,7 +303,7 @@ public class HistoryScene extends ToolbarScene {
     }
 
     private void showClearAllDialog() {
-        new MaterialAlertDialogBuilder(getContext2())
+        new MaterialAlertDialogBuilder(getContext())
                 .setMessage(R.string.clear_all_history)
                 .setPositiveButton(R.string.clear_all, (dialog, which) -> {
                     if (DialogInterface.BUTTON_POSITIVE != which || null == mAdapter) {
@@ -312,23 +314,23 @@ public class HistoryScene extends ToolbarScene {
                     updateLazyList();
                     mAdapter.notifyDataSetChanged();
                     updateView(true);
-                }).show();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         // Skip when in choice mode
-        Context context = getContext2();
+        Context context = getContext();
         if (null == context) {
             return false;
         }
 
         int id = item.getItemId();
-        switch (id) {
-            case R.id.action_clear_all: {
-                showClearAllDialog();
-                return true;
-            }
+        if (id == R.id.action_clear_all) {
+            showClearAllDialog();
+            return true;
         }
         return false;
     }
@@ -351,8 +353,8 @@ public class HistoryScene extends ToolbarScene {
     }
 
     public boolean onItemLongClick(int position) {
-        final Context context = getContext2();
-        final MainActivity activity = getActivity2();
+        final Context context = getContext();
+        final MainActivity activity = getMainActivity();
         if (null == context || null == activity || null == mLazyList) {
             return false;
         }
@@ -465,7 +467,7 @@ public class HistoryScene extends ToolbarScene {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             // Cancel check mode
-            Context context = getContext2();
+            Context context = getContext();
             if (null == context) {
                 return;
             }
@@ -561,6 +563,7 @@ public class HistoryScene extends ToolbarScene {
             simpleLanguage = itemView.findViewById(R.id.simple_language);
         }
 
+        @NonNull
         @Override
         public View getSwipeableContainerView() {
             return card;
@@ -575,9 +578,9 @@ public class HistoryScene extends ToolbarScene {
         private final int mListThumbHeight;
 
         public HistoryAdapter() {
-            mInflater = getLayoutInflater2();
+            mInflater = getLayoutInflater();
 
-            View calculator = mInflater.inflate(R.layout.item_gallery_list_thumb_height, null);
+            @SuppressLint("InflateParams") View calculator = mInflater.inflate(R.layout.item_gallery_list_thumb_height, null);
             ViewUtils.measureView(calculator, 1024, ViewGroup.LayoutParams.WRAP_CONTENT);
             mListThumbHeight = calculator.getMeasuredHeight();
             mListThumbWidth = mListThumbHeight * 2 / 3;
@@ -592,8 +595,9 @@ public class HistoryScene extends ToolbarScene {
             }
         }
 
+        @NonNull
         @Override
-        public HistoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public HistoryHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             HistoryHolder holder = new HistoryHolder(mInflater.inflate(R.layout.item_history, parent, false));
 
             ViewGroup.LayoutParams lp = holder.thumb.getLayoutParams();
@@ -605,7 +609,7 @@ public class HistoryScene extends ToolbarScene {
         }
 
         @Override
-        public void onBindViewHolder(HistoryHolder holder, int position) {
+        public void onBindViewHolder(@NonNull HistoryHolder holder, int position) {
             if (null == mLazyList) {
                 return;
             }
@@ -617,7 +621,7 @@ public class HistoryScene extends ToolbarScene {
             holder.rating.setRating(gi.rating);
             TextView category = holder.category;
             String newCategoryText = EhUtils.getCategory(gi.category);
-            if (!newCategoryText.equals(category.getText())) {
+            if (!newCategoryText.contentEquals(category.getText())) {
                 category.setText(newCategoryText);
                 category.setBackgroundColor(EhUtils.getCategoryColor(gi.category));
             }
@@ -638,25 +642,28 @@ public class HistoryScene extends ToolbarScene {
         }
 
         @Override
-        public int onGetSwipeReactionType(HistoryHolder holder, int position, int x, int y) {
+        public int onGetSwipeReactionType(@NonNull HistoryHolder holder, int position, int x, int y) {
             return SwipeableItemConstants.REACTION_CAN_SWIPE_LEFT;
         }
 
         @Override
-        public void onSwipeItemStarted(HistoryHolder holder, int position) {
+        public void onSwipeItemStarted(@NonNull HistoryHolder holder, int position) {
         }
 
         @Override
-        public void onSetSwipeBackground(HistoryHolder holder, int position, int type) {
+        public void onSetSwipeBackground(@NonNull HistoryHolder holder, int position, int type) {
         }
 
         @Override
-        public SwipeResultAction onSwipeItem(HistoryHolder holder, int position, int result) {
+        public SwipeResultAction onSwipeItem(@NonNull HistoryHolder holder, int position, int result) {
             switch (result) {
                 case SwipeableItemConstants.RESULT_SWIPED_LEFT:
                     return new SwipeResultActionClear(position);
                 case SwipeableItemConstants.RESULT_SWIPED_RIGHT:
                 case SwipeableItemConstants.RESULT_CANCELED:
+                case SwipeableItemConstants.RESULT_NONE:
+                case SwipeableItemConstants.RESULT_SWIPED_DOWN:
+                case SwipeableItemConstants.RESULT_SWIPED_UP:
                 default:
                     return new SwipeResultActionDefault();
             }

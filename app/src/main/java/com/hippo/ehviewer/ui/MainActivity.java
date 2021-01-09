@@ -16,9 +16,6 @@
 
 package com.hippo.ehviewer.ui;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -48,7 +45,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.hippo.drawerlayout.DrawerLayout;
 import com.hippo.ehviewer.AppConfig;
-import com.hippo.ehviewer.EhApplication;
 import com.hippo.ehviewer.R;
 import com.hippo.ehviewer.Settings;
 import com.hippo.ehviewer.client.EhTagDatabase;
@@ -83,6 +79,7 @@ import com.hippo.scene.SceneFragment;
 import com.hippo.scene.StageActivity;
 import com.hippo.unifile.UniFile;
 import com.hippo.util.BitmapUtils;
+import com.hippo.util.ClipboardUtil;
 import com.hippo.widget.LoadImageView;
 import com.hippo.yorozuya.IOUtils;
 import com.hippo.yorozuya.SimpleHandler;
@@ -317,10 +314,10 @@ public final class MainActivity extends StageActivity
         ViewUtils.$$(headerLayout, R.id.night_mode).setOnClickListener(v -> {
             int theme = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) > 0 ? AppCompatDelegate.MODE_NIGHT_NO : AppCompatDelegate.MODE_NIGHT_YES;
             AppCompatDelegate.setDefaultNightMode(theme);
-            ((EhApplication) getApplication()).recreate();
             Settings.putTheme(theme);
         });
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
         updateProfile();
 
@@ -409,17 +406,6 @@ public final class MainActivity extends StageActivity
         return topClass == null || SolidScene.class.isAssignableFrom(topClass);
     }
 
-    private String getTextFromClipboard() {
-        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-        if (clipboard != null) {
-            ClipData clip = clipboard.getPrimaryClip();
-            if (clip != null && clip.getItemCount() > 0 && clip.getItemAt(0).getText() != null) {
-                return clip.getItemAt(0).getText().toString();
-            }
-        }
-        return null;
-    }
-
     @Nullable
     private Announcer createAnnouncerFromClipboardUrl(String url) {
         GalleryDetailUrlParser.Result result1 = GalleryDetailUrlParser.parse(url, false);
@@ -445,7 +431,7 @@ public final class MainActivity extends StageActivity
     }
 
     private void checkClipboardUrlInternal() {
-        String text = getTextFromClipboard();
+        String text = ClipboardUtil.getTextFromClipboard();
         int hashCode = text != null ? text.hashCode() : 0;
 
         if (text != null && hashCode != 0 && Settings.getClipboardTextHashCode() != hashCode) {
@@ -476,26 +462,15 @@ public final class MainActivity extends StageActivity
     public void onSceneViewCreated(SceneFragment scene, Bundle savedInstanceState) {
         super.onSceneViewCreated(scene, savedInstanceState);
 
-        if (scene instanceof BaseScene && mRightDrawer != null && mDrawerLayout != null) {
-            BaseScene baseScene = (BaseScene) scene;
-            mRightDrawer.removeAllViews();
-            View drawerView = baseScene.createDrawerView(
-                    baseScene.getLayoutInflater2(), mRightDrawer, savedInstanceState);
-            if (drawerView != null) {
-                mRightDrawer.addView(drawerView);
-                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.RIGHT);
-            } else {
-                mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, Gravity.RIGHT);
-            }
-        }
+        createDrawerView(scene);
     }
 
-    public void recreateDrawerView(SceneFragment scene) {
+    public void createDrawerView(SceneFragment scene) {
         if (scene instanceof BaseScene && mRightDrawer != null && mDrawerLayout != null) {
             BaseScene baseScene = (BaseScene) scene;
             mRightDrawer.removeAllViews();
             View drawerView = baseScene.createDrawerView(
-                    baseScene.getLayoutInflater2(), mRightDrawer, null);
+                    baseScene.getLayoutInflater(), mRightDrawer, null);
             if (drawerView != null) {
                 mRightDrawer.addView(drawerView);
                 mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, Gravity.RIGHT);

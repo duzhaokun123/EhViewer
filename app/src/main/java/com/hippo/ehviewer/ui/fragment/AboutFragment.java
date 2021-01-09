@@ -21,10 +21,11 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.preference.Preference;
 
-import com.google.android.gms.oss.licenses.OssLicensesMenuActivity;
+import com.hippo.ehviewer.Analytics;
 import com.hippo.ehviewer.EhApplication;
 import com.hippo.ehviewer.R;
 import com.hippo.ehviewer.UrlOpener;
+import com.hippo.text.Html;
 import com.hippo.util.AppHelper;
 //import com.microsoft.appcenter.distribute.Distribute;
 
@@ -56,7 +57,6 @@ public class AboutFragment extends BasePreferenceFragment {
         //donate.setOnPreferenceClickListener(this);
         checkForUpdate.setOnPreferenceClickListener(this);
 //        checkForUpdate.setVisible(Analytics.isEnabled());
-        OssLicensesMenuActivity.setActivityTitle(getString(R.string.license));
     }
 
     @Override
