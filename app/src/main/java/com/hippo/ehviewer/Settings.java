@@ -20,8 +20,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
-import android.view.Display;
-import android.view.WindowManager;
 
 import androidx.annotation.DimenRes;
 import androidx.annotation.NonNull;
@@ -89,7 +87,7 @@ public class Settings {
     public static final String DEFAULT_SECURITY = "";
     public static final String KEY_ENABLE_FINGERPRINT = "enable_fingerprint";
     public static final String KEY_READ_CACHE_SIZE = "read_cache_size";
-    public static final int DEFAULT_READ_CACHE_SIZE = 160;
+    public static final int DEFAULT_READ_CACHE_SIZE = 320;
     public static final String KEY_BUILT_IN_HOSTS = "built_in_hosts_2";
     public static final String KEY_DOH = "dns_over_https";
     public static final String KEY_DOMAIN_FRONTING = "domain_fronting";
@@ -129,11 +127,11 @@ public class Settings {
     private static final boolean DEFAULT_SHOW_TAG_TRANSLATIONS = false;
     private static final int DEFAULT_EXCLUDED_TAG_NAMESPACES = 0;
     private static final String DEFAULT_EXCLUDED_LANGUAGES = null;
-    private static final String KEY_CELLULAR_NETWORK_WARNING = "cellular_network_warning";
-    private static final boolean DEFAULT_CELLULAR_NETWORK_WARNING = false;
+    private static final String KEY_METERED_NETWORK_WARNING = "cellular_network_warning";
+    private static final boolean DEFAULT_METERED_NETWORK_WARNING = false;
     private static final String KEY_NIGHT_MODE = "night_mode";
     private static final String DEFAULT_NIGHT_MODE = "-1";
-    private static final String KEY_E_INK_MODE = "e_ink_mode";
+    private static final String KEY_E_INK_MODE = "e_ink_mode_2";
     private static final boolean DEFAULT_E_INK_MODE = false;
     /********************
      ****** Read
@@ -280,34 +278,33 @@ public class Settings {
     }
 
     private static void fixDefaultValue(Context context) {
-        // Enable DoH if the country is CN
-        if (!sSettingsPre.contains(KEY_DOH)) {
-            if ("CN".equals(Locale.getDefault().getCountry())) {
+        if ("CN".equals(Locale.getDefault().getCountry())) {
+            // Enable DoH and domain fronting if the country is CN
+            if (!sSettingsPre.contains(KEY_DOH)) {
                 putDoH(true);
             }
-        }
-        if (!sSettingsPre.contains(KEY_DOMAIN_FRONTING)) {
-            if ("CN".equals(Locale.getDefault().getCountry())) {
+            if (!sSettingsPre.contains(KEY_DOMAIN_FRONTING)) {
                 putDF(true);
             }
-        }
-        // Enable show tag translations if the country is CN
-        if (!sSettingsPre.contains(KEY_SHOW_TAG_TRANSLATIONS)) {
-            if ("CN".equals(Locale.getDefault().getCountry())) {
+            // Enable show tag translations if the country is CN
+            if (!sSettingsPre.contains(KEY_SHOW_TAG_TRANSLATIONS)) {
                 putShowTagTranslations(true);
+
             }
         }
-        if (!sSettingsPre.contains(KEY_E_INK_MODE)) {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            if (wm != null) {
-                Display display = wm.getDefaultDisplay();
-                if (display != null && display.getRefreshRate() > 0 && display.getRefreshRate() < 5.0) {
-                    // Probably an E-Ink device
-                    putReadTheme(2);
-                    putEInkMode(true);
-                }
-            }
-        }
+        // Xiaomi (and Huawei?) devices have some kind of "dynamic refresh rate" thing,
+        // which will report a low refresh rate causing false positive reports
+        //if (!sSettingsPre.contains(KEY_E_INK_MODE)) {
+        //    WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        //    if (wm != null) {
+        //        Display display = wm.getDefaultDisplay();
+        //        if (display != null && display.getRefreshRate() > 0 && display.getRefreshRate() < 5.0) {
+        //            // Probably an E-Ink device
+        //            putReadTheme(2);
+        //            putEInkMode(true);
+        //        }
+        //    }
+        //}
     }
 
     private static EhConfig loadEhConfig() {
@@ -599,8 +596,8 @@ public class Settings {
         return getBoolean(KEY_E_INK_MODE, DEFAULT_E_INK_MODE);
     }
 
-    public static boolean getCellularNetworkWarning() {
-        return getBoolean(KEY_CELLULAR_NETWORK_WARNING, DEFAULT_CELLULAR_NETWORK_WARNING);
+    public static boolean getMeteredNetworkWarning() {
+        return getBoolean(KEY_METERED_NETWORK_WARNING, DEFAULT_METERED_NETWORK_WARNING);
     }
 
     public static int getScreenRotation() {

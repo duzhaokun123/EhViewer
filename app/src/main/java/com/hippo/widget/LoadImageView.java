@@ -30,6 +30,7 @@ import android.view.View;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 
 import com.hippo.conaco.Conaco;
 import com.hippo.conaco.ConacoTask;
@@ -41,7 +42,6 @@ import com.hippo.ehviewer.R;
 import com.hippo.image.ImageBitmap;
 import com.hippo.image.ImageDrawable;
 import com.hippo.image.RecycledException;
-import com.hippo.util.DrawableManager;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -65,7 +65,7 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
     private int mClipHeight = Integer.MIN_VALUE;
     private int mRetryType;
     private boolean mFailed;
-    private boolean mLoadFromDrawable;
+    private boolean mLoadFromDrawable = false;
 
     public LoadImageView(Context context) {
         super(context);
@@ -109,7 +109,7 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
         if (!mLoadFromDrawable) {
             if (mFailed) {
                 onFailure();
-            } else if (mTaskId == Unikery.INVALID_ID) /* if (!mConaco.isLoading(mTaskId)) TODO Update Conaco */ {
+            } else if (mConaco.isLoading(this)) {
                 load(mKey, mUrl, mContainer, mUseNetwork);
             }
         }
@@ -120,14 +120,16 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
         super.onDetachedFromWindow();
 
         if (!mLoadFromDrawable) {
-            try {
-                // Cancel
-                mConaco.cancel(this);
-            } catch (Exception e) {
-                // Ignore
+            if (mConaco.isLoading(this)) {
+                try {
+                    // Cancel
+                    mConaco.cancel(this);
+                } catch (Exception e) {
+                    // Ignore
+                }
+                // Clear drawable
+                clearDrawable();
             }
-            // Clear drawable
-            clearDrawable();
         }
     }
 
@@ -220,7 +222,6 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
             return;
         }
 
-        mLoadFromDrawable = false;
         mFailed = false;
         clearRetry();
 
@@ -240,7 +241,6 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
 
     public void load(Drawable drawable) {
         unload();
-        mLoadFromDrawable = true;
         onPreSetImageDrawable(drawable, true);
         setImageDrawable(drawable);
     }
@@ -316,7 +316,7 @@ public class LoadImageView extends FixedAspectImageView implements Unikery<Image
     public void onFailure() {
         mFailed = true;
         clearDrawable();
-        Drawable drawable = DrawableManager.getVectorDrawable(getContext(), R.drawable.image_failed);
+        Drawable drawable = ContextCompat.getDrawable(getContext(), R.drawable.image_failed);
         onPreSetImageDrawable(drawable, true);
         setImageDrawable(drawable);
         if (mRetryType == RETRY_TYPE_CLICK) {

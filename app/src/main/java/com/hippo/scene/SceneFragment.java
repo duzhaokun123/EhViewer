@@ -22,6 +22,9 @@ import android.view.View;
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.OnApplyWindowInsetsListener;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 
@@ -34,7 +37,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SceneFragment extends Fragment {
+public class SceneFragment extends Fragment implements OnApplyWindowInsetsListener {
 
     public static final int LAUNCH_MODE_STANDARD = 0;
     public static final int LAUNCH_MODE_SINGLE_TOP = 1;
@@ -51,6 +54,10 @@ public class SceneFragment extends Fragment {
     Bundle result = null;
     List<String> mRequestSceneTagList = new ArrayList<>(0);
     IntList mRequestCodeList = new IntList(0);
+    private int paddingTop = 0;
+    private int paddingBottom = 0;
+    private int paddingLeft = 0;
+    private int paddingRight = 0;
 
     public void onNewArguments(@NonNull Bundle args) {
     }
@@ -104,12 +111,15 @@ public class SceneFragment extends Fragment {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        paddingTop = view.getPaddingTop();
+        paddingBottom = view.getPaddingBottom();
+        paddingLeft = view.getPaddingLeft();
+        paddingRight = view.getPaddingRight();
 
         view.setTag(R.id.fragment_tag, getTag());
-        view.setBackgroundDrawable(AttrResources.getAttrDrawable(getContext(), android.R.attr.windowBackground));
+        view.setBackground(AttrResources.getAttrDrawable(getContext(), android.R.attr.windowBackground));
 
         // Notify
         FragmentActivity activity = getActivity();
@@ -163,6 +173,13 @@ public class SceneFragment extends Fragment {
     public void setResult(int resultCode, Bundle result) {
         this.resultCode = resultCode;
         this.result = result;
+    }
+
+    @Override
+    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+        Insets insets1 = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+        v.setPadding(paddingLeft + insets1.left, insets1.top + paddingTop, paddingRight + insets1.right, insets1.bottom + paddingBottom);
+        return WindowInsetsCompat.CONSUMED;
     }
 
     @IntDef({LAUNCH_MODE_STANDARD, LAUNCH_MODE_SINGLE_TOP, LAUNCH_MODE_SINGLE_TASK})

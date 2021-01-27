@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.text.Spannable;
@@ -33,11 +34,14 @@ import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
+import android.view.WindowInsetsAnimation;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -45,9 +49,14 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.text.util.LinkifyCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -63,17 +72,15 @@ import com.hippo.ehviewer.client.EhUrl;
 import com.hippo.ehviewer.client.data.GalleryComment;
 import com.hippo.ehviewer.client.data.GalleryCommentList;
 import com.hippo.ehviewer.client.data.GalleryDetail;
+import com.hippo.ehviewer.client.data.ListUrlBuilder;
 import com.hippo.ehviewer.client.parser.VoteCommentParser;
 import com.hippo.ehviewer.ui.MainActivity;
-import com.hippo.refreshlayout.RefreshLayout;
 import com.hippo.scene.SceneFragment;
 import com.hippo.text.Html;
 import com.hippo.text.URLImageGetter;
 import com.hippo.util.ClipboardUtil;
-import com.hippo.util.DrawableManager;
 import com.hippo.util.ExceptionUtils;
 import com.hippo.util.ReadableTime;
-import com.hippo.util.TextUrl;
 import com.hippo.view.ViewTransition;
 import com.hippo.widget.FabLayout;
 import com.hippo.widget.LinkifyTextView;
@@ -81,6 +88,7 @@ import com.hippo.widget.ObservedTextView;
 import com.hippo.yorozuya.AnimationUtils;
 import com.hippo.yorozuya.AssertUtils;
 import com.hippo.yorozuya.LayoutUtils;
+import com.hippo.yorozuya.MathUtils;
 import com.hippo.yorozuya.ResourcesUtils;
 import com.hippo.yorozuya.SimpleAnimatorListener;
 import com.hippo.yorozuya.StringUtils;
@@ -91,7 +99,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class GalleryCommentsScene extends ToolbarScene
-        implements View.OnClickListener, RefreshLayout.OnRefreshListener {
+        implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
     public static final String TAG = GalleryCommentsScene.class.getSimpleName();
 
@@ -125,7 +133,7 @@ public final class GalleryCommentsScene extends ToolbarScene
     private CommentAdapter mAdapter;
     @Nullable
     private ViewTransition mViewTransition;
-    private RefreshLayout mRefreshLayout;
+    private SwipeRefreshLayout mRefreshLayout;
     private Drawable mSendDrawable;
     private Drawable mPencilDrawable;
     private long mCommentId;
@@ -192,33 +200,92 @@ public final class GalleryCommentsScene extends ToolbarScene
         mEditText = (EditText) ViewUtils.$$(mEditPanel, R.id.edit_text);
         mFabLayout = (FabLayout) ViewUtils.$$(view, R.id.fab_layout);
         mFab = (FloatingActionButton) ViewUtils.$$(view, R.id.fab);
-        mRefreshLayout = (RefreshLayout) ViewUtils.$$(view, R.id.refresh_layout);
+        mRefreshLayout = (SwipeRefreshLayout) ViewUtils.$$(view, R.id.refresh_layout);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            view.setWindowInsetsAnimationCallback(new WindowInsetsAnimation.Callback(WindowInsetsAnimation.Callback.DISPATCH_MODE_STOP) {
+                int startBottomEditPanel = 0;
+                int startBottomFabLayout = 0;
+                int endBottomEditPanel = 0;
+                int endBottomFabLayout = 0;
+                WindowInsetsAnimation animation;
 
-        mRefreshLayout.setHeaderColorSchemeResources(
+                @Override
+                public void onPrepare(@NonNull WindowInsetsAnimation animation) {
+                    this.animation = animation;
+                    if (mEditPanel != null) {
+                        startBottomEditPanel = mEditPanel.getPaddingBottom();
+                    }
+                    if (mFabLayout != null) {
+                        startBottomFabLayout = mFabLayout.getPaddingBottom();
+                    }
+                    super.onPrepare(animation);
+                }
+
+                @NonNull
+                @Override
+                public WindowInsetsAnimation.Bounds onStart(@NonNull WindowInsetsAnimation animation, @NonNull WindowInsetsAnimation.Bounds bounds) {
+                    this.animation = animation;
+                    if (mEditPanel != null) {
+                        endBottomEditPanel = mEditPanel.getPaddingBottom();
+                        mEditPanel.setTranslationY(-(startBottomEditPanel - endBottomEditPanel));
+                    }
+                    if (mFabLayout != null) {
+                        endBottomFabLayout = mFabLayout.getPaddingBottom();
+                        mFabLayout.setTranslationY(-(startBottomFabLayout - endBottomFabLayout));
+                    }
+                    return bounds;
+                }
+
+                @NonNull
+                @Override
+                public WindowInsets onProgress(@NonNull WindowInsets insets, @NonNull List<WindowInsetsAnimation> runningAnimations) {
+                    if (mEditPanel != null) {
+                        int offset = MathUtils.lerp(-(startBottomEditPanel - endBottomEditPanel), 0, animation.getInterpolatedFraction());
+                        mEditPanel.setTranslationY(offset);
+                    }
+                    if (mFabLayout != null) {
+                        int offset = MathUtils.lerp(-(startBottomFabLayout - endBottomFabLayout), 0, animation.getInterpolatedFraction());
+                        mFabLayout.setTranslationY(offset);
+                    }
+                    return insets;
+                }
+
+                @Override
+                public void onEnd(@NonNull WindowInsetsAnimation animation) {
+                    startBottomEditPanel = 0;
+                    startBottomFabLayout = 0;
+                    endBottomEditPanel = 0;
+                    endBottomFabLayout = 0;
+                    this.animation = null;
+                    if (mEditPanel != null) {
+                        mEditPanel.setTranslationY(0);
+                    }
+                    if (mFabLayout != null) {
+                        mFabLayout.setTranslationY(0);
+                    }
+                }
+            });
+        }
+
+        mRefreshLayout.setColorSchemeResources(
                 R.color.loading_indicator_red,
                 R.color.loading_indicator_purple,
                 R.color.loading_indicator_blue,
                 R.color.loading_indicator_cyan,
                 R.color.loading_indicator_green,
                 R.color.loading_indicator_yellow);
-        mRefreshLayout.setFooterColorSchemeResources(
-                R.color.loading_indicator_red,
-                R.color.loading_indicator_blue,
-                R.color.loading_indicator_green,
-                R.color.loading_indicator_orange);
         mRefreshLayout.setOnRefreshListener(this);
-        mRefreshLayout.setEnableSwipeFooter(false);
 
         Context context = requireContext();
         Resources resources = getResources();
         int paddingBottomFab = resources.getDimensionPixelOffset(R.dimen.gallery_padding_bottom_fab);
 
-        Drawable drawable = DrawableManager.getVectorDrawable(context, R.drawable.big_sad_pandroid);
+        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.big_sad_pandroid);
         drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
         tip.setCompoundDrawables(null, drawable, null, null);
 
-        mSendDrawable = DrawableManager.getVectorDrawable(context, R.drawable.v_send_dark_x24);
-        mPencilDrawable = DrawableManager.getVectorDrawable(context, R.drawable.v_pencil_dark_x24);
+        mSendDrawable = ContextCompat.getDrawable(context, R.drawable.v_send_dark_x24);
+        mPencilDrawable = ContextCompat.getDrawable(context, R.drawable.v_pencil_dark_x24);
 
         mAdapter = new CommentAdapter();
         mRecyclerView.setAdapter(mAdapter);
@@ -276,7 +343,7 @@ public final class GalleryCommentsScene extends ToolbarScene
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setTitle(R.string.gallery_comments);
         setNavigationIcon(R.drawable.v_arrow_left_dark_x24);
@@ -567,6 +634,7 @@ public final class GalleryCommentsScene extends ToolbarScene
     }
 
     private void hideEditPanel(boolean animation) {
+        hideSoftInput();
         if (animation) {
             hideEditPanelWithAnimation();
         } else {
@@ -642,7 +710,7 @@ public final class GalleryCommentsScene extends ToolbarScene
             return;
         }
 
-        mRefreshLayout.setHeaderRefreshing(false);
+        mRefreshLayout.setRefreshing(false);
         mRefreshingComments = false;
         mCommentList = result;
         mAdapter.notifyDataSetChanged();
@@ -659,7 +727,7 @@ public final class GalleryCommentsScene extends ToolbarScene
             return;
         }
 
-        mRefreshLayout.setHeaderRefreshing(false);
+        mRefreshLayout.setRefreshing(false);
         mRefreshingComments = false;
         int position = mAdapter.getItemCount() - 1;
         if (position >= 0) {
@@ -724,7 +792,7 @@ public final class GalleryCommentsScene extends ToolbarScene
     }
 
     @Override
-    public void onHeaderRefresh() {
+    public void onRefresh() {
         if (!mRefreshingComments && mAdapter != null) {
             MainActivity activity = (MainActivity) requireActivity();
             mRefreshingComments = true;
@@ -739,11 +807,6 @@ public final class GalleryCommentsScene extends ToolbarScene
                 EhApplication.getEhClient(activity).execute(request);
             }
         }
-    }
-
-    @Override
-    public void onFooterRefresh() {
-
     }
 
     private static class RefreshCommentListener extends EhCallback<GalleryCommentsScene, GalleryDetail> {
@@ -864,7 +927,7 @@ public final class GalleryCommentsScene extends ToolbarScene
         }
     }
 
-    private static class ActualCommentHolder extends CommentHolder {
+    private class ActualCommentHolder extends CommentHolder {
 
         private final TextView user;
         private final TextView time;
@@ -902,11 +965,19 @@ public final class GalleryCommentsScene extends ToolbarScene
                 ssb.append("\n\n").append(ss);
             }
 
-            return TextUrl.handleTextUrl(ssb);
+            LinkifyCompat.addLinks(ssb, Linkify.WEB_URLS);
+
+            return ssb;
         }
 
         public void bind(GalleryComment value) {
-            user.setText(value.user);
+            user.setText(value.uploader ? getString(R.string.comment_user_uploader, value.user) : value.user);
+            user.setOnClickListener(v -> {
+                ListUrlBuilder lub = new ListUrlBuilder();
+                lub.setMode(ListUrlBuilder.MODE_UPLOADER);
+                lub.setKeyword(value.user);
+                GalleryListScene.startScene(GalleryCommentsScene.this, lub);
+            });
             time.setText(ReadableTime.getTimeAgo(value.time));
             comment.setText(generateComment(comment.getContext(), comment, value));
         }
@@ -984,5 +1055,26 @@ public final class GalleryCommentsScene extends ToolbarScene
                 return TYPE_COMMENT;
             }
         }
+    }
+
+    @Override
+    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+        Insets insets1 = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+        v.setPadding(insets1.left, 0, insets1.right, 0);
+        View statusBarBackground = v.findViewById(R.id.status_bar_background);
+        statusBarBackground.getLayoutParams().height = insets1.top;
+        statusBarBackground.setBackgroundColor(AttrResources.getAttrColor(requireContext(), R.attr.colorPrimaryDark));
+        if (mFabLayout != null) {
+            int corner_fab_margin = getResources().getDimensionPixelOffset(R.dimen.corner_fab_margin);
+            mFabLayout.setPadding(mFabLayout.getPaddingLeft(), mFabLayout.getPaddingTop(), mFabLayout.getPaddingRight(), corner_fab_margin + insets1.bottom);
+        }
+        if (mEditPanel != null) {
+            mEditPanel.setPadding(mEditPanel.getPaddingLeft(), mEditPanel.getPaddingTop(), mEditPanel.getPaddingRight(), insets1.bottom);
+        }
+        if (mRecyclerView != null) {
+            int paddingBottomFab = getResources().getDimensionPixelOffset(R.dimen.gallery_padding_bottom_fab);
+            mRecyclerView.setPadding(mRecyclerView.getPaddingLeft(), mRecyclerView.getPaddingTop(), mRecyclerView.getPaddingRight(), paddingBottomFab + insets1.bottom);
+        }
+        return WindowInsetsCompat.CONSUMED;
     }
 }

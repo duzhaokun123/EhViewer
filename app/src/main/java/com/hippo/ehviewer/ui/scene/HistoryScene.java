@@ -21,19 +21,23 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
@@ -49,7 +53,6 @@ import com.h6ah4i.android.widget.advrecyclerview.swipeable.action.SwipeResultAct
 import com.h6ah4i.android.widget.advrecyclerview.touchguard.RecyclerViewTouchActionGuardManager;
 import com.h6ah4i.android.widget.advrecyclerview.utils.AbstractSwipeableItemViewHolder;
 import com.hippo.android.resource.AttrResources;
-import com.hippo.drawable.DrawerArrowDrawable;
 import com.hippo.easyrecyclerview.EasyRecyclerView;
 import com.hippo.easyrecyclerview.FastScroller;
 import com.hippo.easyrecyclerview.HandlerDrawable;
@@ -73,7 +76,6 @@ import com.hippo.ehviewer.ui.dialog.SelectItemWithIconAdapter;
 import com.hippo.ehviewer.widget.SimpleRatingView;
 import com.hippo.scene.Announcer;
 import com.hippo.scene.SceneFragment;
-import com.hippo.util.DrawableManager;
 import com.hippo.view.ViewTransition;
 import com.hippo.widget.LoadImageView;
 import com.hippo.widget.recyclerview.AutoStaggeredGridLayoutManager;
@@ -91,6 +93,10 @@ public class HistoryScene extends ToolbarScene {
     /*---------------
      View life cycle
      ---------------*/
+    @Nullable
+    private TextView mTip;
+    @Nullable
+    private FastScroller mFastScroller;
     @Nullable
     private EasyRecyclerView mRecyclerView;
     @Nullable
@@ -189,17 +195,17 @@ public class HistoryScene extends ToolbarScene {
         View view = inflater.inflate(R.layout.scene_history, container, false);
         View content = ViewUtils.$$(view, R.id.content);
         mRecyclerView = (EasyRecyclerView) ViewUtils.$$(content, R.id.recycler_view);
-        FastScroller fastScroller = (FastScroller) ViewUtils.$$(content, R.id.fast_scroller);
-        TextView tip = (TextView) ViewUtils.$$(view, R.id.tip);
-        mViewTransition = new ViewTransition(content, tip);
+        mFastScroller = (FastScroller) ViewUtils.$$(content, R.id.fast_scroller);
+        mTip = (TextView) ViewUtils.$$(view, R.id.tip);
+        mViewTransition = new ViewTransition(content, mTip);
 
         Context context = getContext();
         AssertUtils.assertNotNull(context);
         Resources resources = context.getResources();
 
-        Drawable drawable = DrawableManager.getVectorDrawable(context, R.drawable.big_history);
+        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.big_history);
         drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-        tip.setCompoundDrawables(null, drawable, null, null);
+        mTip.setCompoundDrawables(null, drawable, null, null);
 
         RecyclerViewTouchActionGuardManager guardManager = new RecyclerViewTouchActionGuardManager();
         guardManager.setInterceptVerticalScrollingWhileAnimationRunning(true);
@@ -232,10 +238,10 @@ public class HistoryScene extends ToolbarScene {
         guardManager.attachRecyclerView(mRecyclerView);
         swipeManager.attachRecyclerView(mRecyclerView);
 
-        fastScroller.attachToRecyclerView(mRecyclerView);
+        mFastScroller.attachToRecyclerView(mRecyclerView);
         HandlerDrawable handlerDrawable = new HandlerDrawable();
         handlerDrawable.setColor(AttrResources.getAttrColor(context, R.attr.widgetColorThemeAccent));
-        fastScroller.setHandlerDrawable(handlerDrawable);
+        mFastScroller.setHandlerDrawable(handlerDrawable);
 
         updateLazyList();
         updateView(false);
@@ -244,10 +250,10 @@ public class HistoryScene extends ToolbarScene {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         setTitle(R.string.history);
-        setNavigationIcon(new DrawerArrowDrawable(getContext(), Color.WHITE));
+        setNavigationIcon(R.drawable.ic_baseline_menu_24);
     }
 
     @Override
@@ -303,7 +309,7 @@ public class HistoryScene extends ToolbarScene {
     }
 
     private void showClearAllDialog() {
-        new MaterialAlertDialogBuilder(getContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setMessage(R.string.clear_all_history)
                 .setPositiveButton(R.string.clear_all, (dialog, which) -> {
                     if (DialogInterface.BUTTON_POSITIVE != which || null == mAdapter) {
@@ -549,6 +555,8 @@ public class HistoryScene extends ToolbarScene {
         public final TextView category;
         public final TextView posted;
         public final TextView simpleLanguage;
+        public final TextView pages;
+        public final ImageView downloaded;
 
         public HistoryHolder(View itemView) {
             super(itemView);
@@ -561,6 +569,8 @@ public class HistoryScene extends ToolbarScene {
             category = itemView.findViewById(R.id.category);
             posted = itemView.findViewById(R.id.posted);
             simpleLanguage = itemView.findViewById(R.id.simple_language);
+            pages = itemView.findViewById(R.id.pages);
+            downloaded = itemView.findViewById(R.id.downloaded);
         }
 
         @NonNull
@@ -626,7 +636,16 @@ public class HistoryScene extends ToolbarScene {
                 category.setBackgroundColor(EhUtils.getCategoryColor(gi.category));
             }
             holder.posted.setText(gi.posted);
-            holder.simpleLanguage.setText(gi.simpleLanguage);
+            holder.pages.setText(null);
+            holder.pages.setVisibility(View.GONE);
+            if (TextUtils.isEmpty(gi.simpleLanguage)) {
+                holder.simpleLanguage.setText(null);
+                holder.simpleLanguage.setVisibility(View.GONE);
+            } else {
+                holder.simpleLanguage.setText(gi.simpleLanguage);
+                holder.simpleLanguage.setVisibility(View.VISIBLE);
+            }
+            holder.downloaded.setVisibility(mDownloadManager.containDownloadInfo(gi.gid) ? View.VISIBLE : View.GONE);
 
             // Update transition name
             long gid = gi.gid;
@@ -691,5 +710,26 @@ public class HistoryScene extends ToolbarScene {
             mAdapter.notifyDataSetChanged();
             updateView(true);
         }
+    }
+
+    @Override
+    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+        Insets insets1 = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+        v.setPadding(insets1.left, 0, insets1.right, 0);
+        View statusBarBackground = v.findViewById(R.id.status_bar_background);
+        statusBarBackground.getLayoutParams().height = insets1.top;
+        statusBarBackground.setBackgroundColor(AttrResources.getAttrColor(requireContext(), R.attr.colorPrimaryDark));
+        if (mRecyclerView != null) {
+            int paddingH = getResources().getDimensionPixelOffset(R.dimen.gallery_list_margin_h);
+            int paddingV = getResources().getDimensionPixelOffset(R.dimen.gallery_list_margin_v);
+            mRecyclerView.setPadding(paddingH, paddingV, paddingH, paddingV + insets1.bottom);
+        }
+        if (mFastScroller != null) {
+            mFastScroller.setPadding(mFastScroller.getPaddingLeft(), mFastScroller.getPaddingTop(), mFastScroller.getPaddingRight(), insets1.bottom);
+        }
+        if (mTip != null) {
+            mTip.setPadding(mTip.getPaddingLeft(), mTip.getPaddingTop(), mTip.getPaddingRight(), insets1.bottom);
+        }
+        return WindowInsetsCompat.CONSUMED;
     }
 }

@@ -29,7 +29,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.graphics.Insets;
+import androidx.core.view.WindowInsetsCompat;
 
+import com.hippo.android.resource.AttrResources;
 import com.hippo.ehviewer.R;
 
 public abstract class ToolbarScene extends BaseScene {
@@ -70,7 +73,7 @@ public abstract class ToolbarScene extends BaseScene {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (mToolbar != null) {
             if (mTempTitle != null) {
@@ -126,5 +129,15 @@ public abstract class ToolbarScene extends BaseScene {
         } else {
             mTempTitle = title;
         }
+    }
+
+    @Override
+    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+        Insets insets1 = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+        v.setPadding(insets1.left, 0, insets1.right, insets1.bottom);
+        View statusBarBackground = v.findViewById(R.id.status_bar_background);
+        statusBarBackground.getLayoutParams().height = insets1.top;
+        statusBarBackground.setBackgroundColor(AttrResources.getAttrColor(requireContext(), R.attr.colorPrimaryDark));
+        return WindowInsetsCompat.CONSUMED;
     }
 }

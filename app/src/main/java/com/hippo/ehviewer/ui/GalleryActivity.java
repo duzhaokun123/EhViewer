@@ -66,6 +66,7 @@ import com.hippo.ehviewer.AppConfig;
 import com.hippo.ehviewer.BuildConfig;
 import com.hippo.ehviewer.R;
 import com.hippo.ehviewer.Settings;
+import com.hippo.ehviewer.client.EhUrl;
 import com.hippo.ehviewer.client.data.GalleryInfo;
 import com.hippo.ehviewer.gallery.ArchiveGalleryProvider;
 import com.hippo.ehviewer.gallery.DirGalleryProvider;
@@ -373,12 +374,28 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
 
         // System UI helper
         if (Settings.getReadingFullscreen()) {
-            int systemUiLevel;
-            systemUiLevel = SystemUiHelper.LEVEL_IMMERSIVE;
-            mSystemUiHelper = new SystemUiHelper(this, systemUiLevel,
-                    SystemUiHelper.FLAG_LAYOUT_IN_SCREEN_OLDER_DEVICES | SystemUiHelper.FLAG_IMMERSIVE_STICKY);
+            mSystemUiHelper = new SystemUiHelper(this);
             mSystemUiHelper.hide();
             mShowSystemUi = false;
+        } else {
+            Window window = getWindow();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                View decorView = window.getDecorView();
+                int flags = decorView.getSystemUiVisibility();
+                if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) <= 0) {
+                    flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                } else {
+                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                }
+                decorView.setSystemUiVisibility(flags);
+                window.setStatusBarColor(AttrResources.getAttrColor(this, android.R.attr.colorBackground));
+            } else {
+                if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_YES) <= 0) {
+                    window.setStatusBarColor(AttrResources.getAttrColor(this, R.attr.colorPrimaryDark));
+                } else {
+                    window.setStatusBarColor(AttrResources.getAttrColor(this, android.R.attr.colorBackground));
+                }
+            }
         }
 
         mMaskView = (ColorView) ViewUtils.$$(this, R.id.mask);
@@ -806,6 +823,7 @@ public class GalleryActivity extends EhActivity implements SeekBar.OnSeekBarChan
         intent.setAction(Intent.ACTION_SEND);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.putExtra(Intent.EXTRA_STREAM, uri);
+        intent.putExtra(Intent.EXTRA_TEXT, EhUrl.getGalleryDetailUrl(mGalleryInfo.gid, mGalleryInfo.token));
         intent.setDataAndType(uri, getContentResolver().getType(uri));
 
         try {

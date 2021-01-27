@@ -44,10 +44,12 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RatingBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -60,12 +62,15 @@ import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.transition.TransitionInflater;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.hippo.android.resource.AttrResources;
 import com.hippo.app.EditTextDialogBuilder;
 import com.hippo.beerbelly.BeerBelly;
@@ -106,14 +111,12 @@ import com.hippo.scene.TransitionHelper;
 import com.hippo.text.Html;
 import com.hippo.text.URLImageGetter;
 import com.hippo.util.AppHelper;
-import com.hippo.util.DrawableManager;
 import com.hippo.util.ExceptionUtils;
 import com.hippo.util.ReadableTime;
 import com.hippo.view.ViewTransition;
 import com.hippo.widget.AutoWrapLayout;
 import com.hippo.widget.LoadImageView;
 import com.hippo.widget.ObservedTextView;
-import com.hippo.widget.ProgressView;
 import com.hippo.widget.SimpleGridAutoSpanLayout;
 import com.hippo.yorozuya.AssertUtils;
 import com.hippo.yorozuya.FileUtils;
@@ -163,7 +166,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
     private ViewTransition mViewTransition;
     // Header
     @Nullable
-    private View mHeader;
+    private FrameLayout mHeader;
     @Nullable
     private View mColorBg;
     @Nullable
@@ -494,7 +497,15 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         View view = inflater.inflate(R.layout.scene_gallery_detail, container, false);
 
         ViewGroup main = (ViewGroup) ViewUtils.$$(view, R.id.main);
-        View mainView = ViewUtils.$$(main, R.id.scroll_view);
+        ScrollView mainView = (ScrollView) ViewUtils.$$(main, R.id.scroll_view);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mainView.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                if (mActionGroup != null && mHeader != null) {
+                    //noinspection IntegerDivisionInFloatingPointContext
+                    setLightStatusBar(mActionGroup.getY() - mHeader.findViewById(R.id.header_content).getPaddingTop() / 2 < scrollY);
+                }
+            });
+        }
         View progressView = ViewUtils.$$(main, R.id.progress_view);
         mTip = (TextView) ViewUtils.$$(main, R.id.tip);
         mViewTransition = new ViewTransition(mainView, progressView, mTip);
@@ -531,12 +542,12 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             }
         });
 
-        Drawable drawable = DrawableManager.getVectorDrawable(context, R.drawable.big_sad_pandroid);
+        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.big_sad_pandroid);
         drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
         mTip.setCompoundDrawables(null, drawable, null, null);
         mTip.setOnClickListener(this);
 
-        mHeader = ViewUtils.$$(mainView, R.id.header);
+        mHeader = (FrameLayout) ViewUtils.$$(mainView, R.id.header);
         mColorBg = ViewUtils.$$(mHeader, R.id.color_bg);
         mThumb = (LoadImageView) ViewUtils.$$(mHeader, R.id.thumb);
         mTitle = (TextView) ViewUtils.$$(mHeader, R.id.title);
@@ -748,7 +759,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
     private void setActionDrawable(@Nullable TextView text, @DrawableRes int resId) {
         if (text == null) return;
         Context context = text.getContext();
-        Drawable drawable = DrawableManager.getVectorDrawable(context, resId);
+        Drawable drawable = ContextCompat.getDrawable(context, resId);
         if (drawable == null) return;
         drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
         text.setCompoundDrawables(null, drawable, null, null);
@@ -806,16 +817,25 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
 
         switch (state) {
             case STATE_NORMAL:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    setLightStatusBar(false);
+                }
                 // Show mMainView
                 mViewTransition.showView(0, animation);
                 // Show mBelowHeader
                 mViewTransition2.showView(0, animation);
                 break;
             case STATE_REFRESH:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    setLightStatusBar(true);
+                }
                 // Show mProgressView
                 mViewTransition.showView(1, animation);
                 break;
             case STATE_REFRESH_HEADER:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    setLightStatusBar(false);
+                }
                 // Show mMainView
                 mViewTransition.showView(0, animation);
                 // Show mProgress
@@ -824,6 +844,9 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             default:
             case STATE_INIT:
             case STATE_FAILED:
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    setLightStatusBar(true);
+                }
                 // Show mFailedView
                 mViewTransition.showView(2, animation);
                 break;
@@ -1006,6 +1029,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             mComments.addView(v, i);
             TextView user = v.findViewById(R.id.user);
             user.setText(comment.user);
+            user.setBackgroundColor(Color.TRANSPARENT);
             TextView time = v.findViewById(R.id.time);
             time.setText(ReadableTime.getTimeAgo(comment.time));
             ObservedTextView c = v.findViewById(R.id.comment);
@@ -1091,17 +1115,22 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
                     request();
                 }
             } else if (itemId == R.id.action_add_tag) {
-                if (mGalleryDetail != null) {
-                    EditTextDialogBuilder builder = new EditTextDialogBuilder(context, "", getString(R.string.action_add_tag_tip));
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    AlertDialog dialog = builder.setTitle(R.string.action_add_tag)
-                            .show();
-                    dialog.getButton(DialogInterface.BUTTON_POSITIVE)
-                            .setOnClickListener(v -> {
-                                voteTag(builder.getText().trim(), 1);
-                                dialog.dismiss();
-                            });
+                if (mGalleryDetail == null) {
+                    return false;
                 }
+                if (mGalleryDetail.apiUid < 0) {
+                    showTip(R.string.sign_in_first, LENGTH_LONG);
+                    return false;
+                }
+                EditTextDialogBuilder builder = new EditTextDialogBuilder(context, "", getString(R.string.action_add_tag_tip));
+                builder.setPositiveButton(android.R.string.ok, null);
+                AlertDialog dialog = builder.setTitle(R.string.action_add_tag)
+                        .show();
+                dialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                        .setOnClickListener(v -> {
+                            voteTag(builder.getText().trim(), 1);
+                            dialog.dismiss();
+                        });
             }
             return true;
         });
@@ -1377,17 +1406,15 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         new MaterialAlertDialogBuilder(context)
                 .setMessage(getString(R.string.filter_the_uploader, uploader))
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                    if (which != DialogInterface.BUTTON_POSITIVE) {
-                        return;
-                    }
-
                     Filter filter = new Filter();
                     filter.mode = EhFilter.MODE_UPLOADER;
                     filter.text = uploader;
                     EhFilter.getInstance().addFilter(filter);
 
                     showTip(R.string.filter_added, LENGTH_SHORT);
-                }).show();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void showFilterTagDialog(String tag) {
@@ -1399,17 +1426,15 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         new MaterialAlertDialogBuilder(context)
                 .setMessage(getString(R.string.filter_the_tag, tag))
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
-                    if (which != DialogInterface.BUTTON_POSITIVE) {
-                        return;
-                    }
-
                     Filter filter = new Filter();
                     filter.mode = EhFilter.MODE_TAG;
                     filter.text = tag;
                     EhFilter.getInstance().addFilter(filter);
 
                     showTip(R.string.filter_added, LENGTH_SHORT);
-                }).show();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     private void showTagDialog(final String tag) {
@@ -1434,10 +1459,12 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
         menuId.add(R.id.show_definition);
         menu.add(resources.getString(R.string.add_filter));
         menuId.add(R.id.add_filter);
-        menu.add(resources.getString(R.string.tag_vote_up));
-        menuId.add(R.id.vote_up);
-        menu.add(resources.getString(R.string.tag_vote_down));
-        menuId.add(R.id.vote_down);
+        if (mGalleryDetail != null && mGalleryDetail.apiUid >= 0) {
+            menu.add(resources.getString(R.string.tag_vote_up));
+            menuId.add(R.id.vote_up);
+            menu.add(resources.getString(R.string.tag_vote_down));
+            menuId.add(R.id.vote_down);
+        }
 
         new MaterialAlertDialogBuilder(context)
                 .setTitle(tag)
@@ -1908,7 +1935,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             DialogInterface.OnDismissListener, EhClient.Callback<Pair<String, Pair<String, String>[]>> {
 
         @Nullable
-        private ProgressView mProgressView;
+        private CircularProgressIndicator mProgressView;
         @Nullable
         private TextView mErrorText;
         @Nullable
@@ -1920,7 +1947,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
 
         public void setDialog(@Nullable Dialog dialog, String url) {
             mDialog = dialog;
-            mProgressView = (ProgressView) ViewUtils.$$(dialog, R.id.progress);
+            mProgressView = (CircularProgressIndicator) ViewUtils.$$(dialog, R.id.progress);
             mErrorText = (TextView) ViewUtils.$$(dialog, R.id.text);
             mListView = (ListView) ViewUtils.$$(dialog, R.id.list_view);
             mListView.setOnItemClickListener(this);
@@ -2025,7 +2052,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
             DialogInterface.OnDismissListener, EhClient.Callback<Pair<String, String>[]> {
 
         @Nullable
-        private ProgressView mProgressView;
+        private CircularProgressIndicator mProgressView;
         @Nullable
         private TextView mErrorText;
         @Nullable
@@ -2037,7 +2064,7 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
 
         public void setDialog(@Nullable Dialog dialog, String url) {
             mDialog = dialog;
-            mProgressView = (ProgressView) ViewUtils.$$(dialog, R.id.progress);
+            mProgressView = (CircularProgressIndicator) ViewUtils.$$(dialog, R.id.progress);
             mErrorText = (TextView) ViewUtils.$$(dialog, R.id.text);
             mListView = (ListView) ViewUtils.$$(dialog, R.id.list_view);
             mListView.setOnItemClickListener(this);
@@ -2188,5 +2215,25 @@ public class GalleryDetailScene extends BaseScene implements View.OnClickListene
                             activity.getStageId(), getTag(), mGalleryDetail.gid));
             EhApplication.getEhClient(context).execute(request);
         }
+    }
+
+    @Override
+    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+        Insets insets1 = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+        v.setPadding(insets1.left, 0, insets1.right, 0);
+        if (mHeader != null) {
+            mHeader.findViewById(R.id.header_content).setPadding(0, insets1.top, 0, 0);
+        }
+        if (mPreviews != null) {
+            int keylineMargin = getResources().getDimensionPixelOffset(R.dimen.keyline_margin);
+            mPreviews.setPadding(keylineMargin, keylineMargin, keylineMargin, keylineMargin + insets1.bottom);
+        }
+        if (mTip != null) {
+            mTip.setPadding(mTip.getPaddingLeft(), mTip.getPaddingTop(), mTip.getPaddingRight(), insets1.bottom);
+        }
+        if (mProgress != null) {
+            mProgress.setPadding(mProgress.getPaddingLeft(), mProgress.getPaddingTop(), mProgress.getPaddingRight(), insets1.bottom);
+        }
+        return WindowInsetsCompat.CONSUMED;
     }
 }

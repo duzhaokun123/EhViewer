@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Hippo Seven
+ * Copyright 2015 Hippo Seven
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package com.hippo.util;
+package com.hippo.conaco;
 
-import android.content.Context;
-import android.graphics.drawable.Drawable;
+public interface ProgressNotifier {
 
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
-
-public final class DrawableManager {
-
-    public static Drawable getVectorDrawable(@NonNull Context context, @DrawableRes int resId) {
-        return ResourcesCompat.getDrawable(context.getResources(), resId, context.getTheme());
-    }
+    void notifyProgress(long singleReceivedSize, long receivedSize, long totalSize);
 }

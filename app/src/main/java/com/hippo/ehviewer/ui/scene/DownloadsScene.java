@@ -22,7 +22,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -49,7 +48,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -71,7 +72,6 @@ import com.hippo.app.CheckBoxDialogBuilder;
 import com.hippo.app.EditTextDialogBuilder;
 import com.hippo.conaco.DataContainer;
 import com.hippo.conaco.ProgressNotifier;
-import com.hippo.drawable.DrawerArrowDrawable;
 import com.hippo.easyrecyclerview.EasyRecyclerView;
 import com.hippo.easyrecyclerview.FastScroller;
 import com.hippo.easyrecyclerview.HandlerDrawable;
@@ -95,7 +95,6 @@ import com.hippo.io.UniFileInputStreamPipe;
 import com.hippo.scene.Announcer;
 import com.hippo.streampipe.InputStreamPipe;
 import com.hippo.unifile.UniFile;
-import com.hippo.util.DrawableManager;
 import com.hippo.util.IoThreadPoolExecutor;
 import com.hippo.view.ViewTransition;
 import com.hippo.widget.FabLayout;
@@ -139,6 +138,10 @@ public class DownloadsScene extends ToolbarScene
     /*---------------
      View life cycle
      ---------------*/
+    @Nullable
+    private TextView mTip;
+    @Nullable
+    private FastScroller mFastScroller;
     @Nullable
     private EasyRecyclerView mRecyclerView;
     @Nullable
@@ -332,18 +335,18 @@ public class DownloadsScene extends ToolbarScene
 
         View content = ViewUtils.$$(view, R.id.content);
         mRecyclerView = (EasyRecyclerView) ViewUtils.$$(content, R.id.recycler_view);
-        FastScroller fastScroller = (FastScroller) ViewUtils.$$(content, R.id.fast_scroller);
+        mFastScroller = (FastScroller) ViewUtils.$$(content, R.id.fast_scroller);
         mFabLayout = (FabLayout) ViewUtils.$$(view, R.id.fab_layout);
-        TextView tip = (TextView) ViewUtils.$$(view, R.id.tip);
-        mViewTransition = new ViewTransition(content, tip);
+        mTip = (TextView) ViewUtils.$$(view, R.id.tip);
+        mViewTransition = new ViewTransition(content, mTip);
 
         Context context = getContext();
         AssertUtils.assertNotNull(content);
         Resources resources = context.getResources();
 
-        Drawable drawable = DrawableManager.getVectorDrawable(context, R.drawable.big_download);
+        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.big_download);
         drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-        tip.setCompoundDrawables(null, drawable, null, null);
+        mTip.setCompoundDrawables(null, drawable, null, null);
 
         mAdapter = new DownloadAdapter();
         mAdapter.setHasStableIds(true);
@@ -376,11 +379,11 @@ public class DownloadsScene extends ToolbarScene
             mInitPosition = -1;
         }
 
-        fastScroller.attachToRecyclerView(mRecyclerView);
+        mFastScroller.attachToRecyclerView(mRecyclerView);
         HandlerDrawable handlerDrawable = new HandlerDrawable();
         handlerDrawable.setColor(AttrResources.getAttrColor(context, R.attr.widgetColorThemeAccent));
-        fastScroller.setHandlerDrawable(handlerDrawable);
-        fastScroller.setOnDragHandlerListener(this);
+        mFastScroller.setHandlerDrawable(handlerDrawable);
+        mFastScroller.setOnDragHandlerListener(this);
 
         mFabLayout.setExpanded(false, false);
         mFabLayout.setHidePrimaryFab(true);
@@ -475,10 +478,10 @@ public class DownloadsScene extends ToolbarScene
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         updateTitle();
-        setNavigationIcon(new DrawerArrowDrawable(getContext(), Color.WHITE));
+        setNavigationIcon(R.drawable.ic_baseline_menu_24);
     }
 
     @Override
@@ -1534,5 +1537,30 @@ public class DownloadsScene extends ToolbarScene
                 }
             }
         }
+    }
+
+    @Override
+    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+        Insets insets1 = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+        v.setPadding(insets1.left, 0, insets1.right, 0);
+        View statusBarBackground = v.findViewById(R.id.status_bar_background);
+        statusBarBackground.getLayoutParams().height = insets1.top;
+        statusBarBackground.setBackgroundColor(AttrResources.getAttrColor(requireContext(), R.attr.colorPrimaryDark));
+        if (mRecyclerView != null) {
+            int paddingH = getResources().getDimensionPixelOffset(R.dimen.gallery_list_margin_h);
+            int paddingV = getResources().getDimensionPixelOffset(R.dimen.gallery_list_margin_v);
+            mRecyclerView.setPadding(paddingH, paddingV, paddingH, paddingV + insets1.bottom);
+        }
+        if (mFastScroller != null) {
+            mFastScroller.setPadding(mFastScroller.getPaddingLeft(), mFastScroller.getPaddingTop(), mFastScroller.getPaddingRight(), insets1.bottom);
+        }
+        if (mTip != null) {
+            mTip.setPadding(mTip.getPaddingLeft(), mTip.getPaddingTop(), mTip.getPaddingRight(), insets1.bottom);
+        }
+        if (mFabLayout != null) {
+            int corner_fab_margin = getResources().getDimensionPixelOffset(R.dimen.corner_fab_margin);
+            mFabLayout.setPadding(mFabLayout.getPaddingLeft(), mFabLayout.getPaddingTop(), mFabLayout.getPaddingRight(), corner_fab_margin + insets1.bottom);
+        }
+        return WindowInsetsCompat.CONSUMED;
     }
 }

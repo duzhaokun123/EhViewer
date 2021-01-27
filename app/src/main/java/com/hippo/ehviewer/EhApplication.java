@@ -217,7 +217,7 @@ public class EhApplication extends RecordingApplication {
             builder.memoryCacheMaxSize = getMemoryCacheMaxSize();
             builder.hasDiskCache = true;
             builder.diskCacheDir = new File(context.getCacheDir(), "thumb");
-            builder.diskCacheMaxSize = 80 * 1024 * 1024; // 80MB
+            builder.diskCacheMaxSize = 320 * 1024 * 1024; // 320MB
             builder.okHttpClient = getOkHttpClient(context);
             builder.objectHelper = getImageBitmapHelper(context);
             builder.debug = DEBUG_CONACO;
@@ -247,7 +247,7 @@ public class EhApplication extends RecordingApplication {
         EhApplication application = ((EhApplication) context.getApplicationContext());
         if (null == application.mSpiderInfoCache) {
             application.mSpiderInfoCache = new SimpleDiskCache(
-                    new File(context.getCacheDir(), "spider_info"), 5 * 1024 * 1024); // 5M
+                    new File(context.getCacheDir(), "spider_info"), 20 * 1024 * 1024); // 20M
         }
         return application.mSpiderInfoCache;
     }
@@ -344,13 +344,10 @@ public class EhApplication extends RecordingApplication {
             EhDB.mergeOldDB(this);
         }
 
-//        if (Settings.getEnableAnalytics()) {
-//            Analytics.start(this);
-//        }
-
         AppCompatDelegate.setDefaultNightMode(Settings.getTheme());
 
         // Do io tasks in new thread
+        //noinspection deprecation
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
@@ -363,6 +360,7 @@ public class EhApplication extends RecordingApplication {
                         CommonOperations.ensureNoMediaFile(downloadLocation);
                     }
                 } catch (Throwable t) {
+                    t.printStackTrace();
                     ExceptionUtils.throwIfFatal(t);
                 }
 
@@ -370,6 +368,7 @@ public class EhApplication extends RecordingApplication {
                 try {
                     clearTempDir();
                 } catch (Throwable t) {
+                    t.printStackTrace();
                     ExceptionUtils.throwIfFatal(t);
                 }
 
@@ -425,9 +424,6 @@ public class EhApplication extends RecordingApplication {
         if (null != dir) {
             FileUtils.deleteContent(dir);
         }
-
-        // Add .nomedia to external temp dir
-        CommonOperations.ensureNoMediaFile(UniFile.fromFile(AppConfig.getExternalTempDir()));
     }
 
     private void update() {
@@ -490,8 +486,8 @@ public class EhApplication extends RecordingApplication {
         return mGlobalStuffMap.remove(id);
     }
 
-    public boolean removeGlobalStuff(Object o) {
-        return mGlobalStuffMap.values().removeAll(Collections.singleton(o));
+    public void removeGlobalStuff(Object o) {
+        mGlobalStuffMap.values().removeAll(Collections.singleton(o));
     }
 
     public void registerActivity(Activity activity) {
@@ -517,6 +513,7 @@ public class EhApplication extends RecordingApplication {
         try {
             return super.startService(service);
         } catch (Throwable t) {
+            t.printStackTrace();
             ExceptionUtils.throwIfFatal(t);
             return null;
         }
@@ -528,6 +525,7 @@ public class EhApplication extends RecordingApplication {
         try {
             return super.bindService(service, conn, flags);
         } catch (Throwable t) {
+            t.printStackTrace();
             ExceptionUtils.throwIfFatal(t);
             return false;
         }
@@ -539,7 +537,20 @@ public class EhApplication extends RecordingApplication {
         try {
             super.unbindService(conn);
         } catch (Throwable t) {
+            t.printStackTrace();
             ExceptionUtils.throwIfFatal(t);
+        }
+    }
+
+    // Avoid crash on some "energy saving" devices
+    @Override
+    public ComponentName startForegroundService(Intent service) {
+        try {
+            return super.startForegroundService(service);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            ExceptionUtils.throwIfFatal(t);
+            return null;
         }
     }
 }
