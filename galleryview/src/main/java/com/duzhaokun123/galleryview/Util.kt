@@ -39,6 +39,7 @@ fun PhotoView.setImageBitmap(bm: Bitmap, @GalleryView.ScaleMode scaleMode: Int) 
         Log.d(tag, "setImageBitmap: scale $scale")
         this@setImageBitmap.maximumScale = max(DEFAULT_MAX_SCALE, scale)
         this@setImageBitmap.minimumScale = min(DEFAULT_MIN_SCALE, scale)
+        this@setImageBitmap.mediumScale = (maximumScale + minimumScale) / 2
         this@setImageBitmap.scale = scale
     }
 }
