@@ -9,17 +9,13 @@ An E-Hentai Application for Android.
 
 # Note
 
-要新功能修 Bug (你确定不是我的代码造成的) 先找 [NekoInverter](https://gitlab.com/NekoInverter/EhViewer)
+已弃用 用[NekoInverter的](https://gitlab.com/NekoInverter/EhViewer)
 
-Ask [NekoInverter](https://gitlab.com/NekoInverter/EhViewer) for new functions and bugs (which are not leaded by my code) as first
+Deprecated, use [NekoInverter's edition](https://gitlab.com/NekoInverter/EhViewer)
 
 仅支持 API >= 29 Android 10 的设备
 
 Only support API >= 29 Android 10
-
-`GalleryActivity`正在重构, 不要反馈关于它的 Bug
-
-`GalleryActivity` is in refactoring, do not report bugs about it
 
 
 # Screenshot
